@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mando Remoto</title>
+    <style>
+        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #2c3e50; color: white; font-family: sans-serif; }
+        button { padding: 20px; font-size: 20px; border-radius: 10px; border: none; background: #3498db; color: white; margin-bottom: 20px;}
+    </style>
+</head>
+<body>
+    <button id="startBtn">Activar Sensores</button>
+    <h2 id="status">Esperando...</h2>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const status = document.getElementById('status');
+        let lastGestureTime = 0;
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('devicemotion', handleMotion);
+                            status.innerText = "Sensores Activos";
+                        }
+                    })
+                    .catch(console.error);
+            } else {
+                window.addEventListener('devicemotion', handleMotion);
+                status.innerText = "Sensores Activos";
+            }
+        });
+
+        function handleMotion(event) {
+            const now = Date.now();
+            if (now - lastGestureTime < 800) return; // Cooldown para no enviar mil eventos seguidos
+
+            const x = event.acceleration.x; // Izquierda / Derecha
+            const y = event.acceleration.y; // Arriba / Abajo
+            const z = event.acceleration.z; // Adelante / Atrás (Empuje)
+            
+            // Umbrales de detección (Ajustar según las pruebas físicas)
+            const threshold = 5; 
+
+            let command = null;
+
+            if (z > threshold + 3) command = 'enter'; // Empuje hacia adelante
+            else if (x > threshold) command = 'left';
+            else if (x < -threshold) command = 'right';
+            else if (y > threshold) command = 'up';
+            else if (y < -threshold) command = 'down';
+
+            if (command) {
+                socket.emit('gesture', command);
+                status.innerText = `Enviado: ${command}`;
+                lastGestureTime = now;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pantalla Principal</title>
+    <style>
+        body { background: #ecf0f1; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 80vw; max-width: 800px; }
+        .card { background: white; padding: 40px; border-radius: 15px; text-align: center; font-size: 24px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s, border 0.2s; border: 5px solid transparent; }
+        .active { border-color: #e74c3c; transform: scale(1.05); }
+        #view { display: none; background: white; padding: 40px; border-radius: 15px; width: 80vw; max-width: 800px; text-align: center; font-size: 24px;}
+    </style>
+</head>
+<body>
+    <div class="grid" id="mainMenu">
+        <div class="card active" id="menu-0">Luces</div>
+        <div class="card" id="menu-1">Tareas</div>
+        <div class="card" id="menu-2">Objetos</div>
+        <div class="card" id="menu-3">Pagos</div>
+    </div>
+
+    <div id="view">
+        <h1 id="viewTitle">Sección</h1>
+        <p id="viewContent">Contenido...</p>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let currentIndex = 0;
+        const totalItems = 4;
+        let inSubMenu = false;
+
+        const menuItems = ['Luces', 'Tareas', 'Objetos', 'Pagos'];
+        
+        function updateSelection() {
+            document.querySelectorAll('.card').forEach(el => el.classList.remove('active'));
+            document.getElementById(`menu-${currentIndex}`).classList.add('active');
+        }
+
+        socket.on('updateScreen', (command) => {
+            if (!inSubMenu) {
+                // Lógica de navegación en el menú principal (Grid 2x2)
+                if (command === 'right' && currentIndex % 2 === 0) currentIndex++;
+                if (command === 'left' && currentIndex % 2 !== 0) currentIndex--;
+                if (command === 'down' && currentIndex < 2) currentIndex += 2;
+                if (command === 'up' && currentIndex >= 2) currentIndex -= 2;
+                
+                updateSelection();
+
+                if (command === 'enter') {
+                    inSubMenu = true;
+                    document.getElementById('mainMenu').style.display = 'none';
+                    document.getElementById('view').style.display = 'block';
+                    document.getElementById('viewTitle').innerText = menuItems[currentIndex];
+                    
+                    // Simular contenido interno
+                    if (currentIndex === 0) document.getElementById('viewContent').innerText = "💡 Luz Salón: ON | 💡 Luz Cocina: OFF";
+                    if (currentIndex === 1) document.getElementById('viewContent').innerText = "Christian: Comprar leche \n Adrián: Sacar basura";
+                }
+            } else {
+                // Si estás dentro de una sección, un 'enter' (o gesto hacia atrás que puedes programar) te saca
+                if (command === 'enter' || command === 'up') {
+                    inSubMenu = false;
+                    document.getElementById('mainMenu').style.display = 'grid';
+                    document.getElementById('view').style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

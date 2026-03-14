@@ -1,72 +1,696 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Pantalla Principal</title>
-    <style>
-        body { background: #ecf0f1; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 80vw; max-width: 800px; }
-        .card { background: white; padding: 40px; border-radius: 15px; text-align: center; font-size: 24px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s, border 0.2s; border: 5px solid transparent; }
-        .active { border-color: #e74c3c; transform: scale(1.05); }
-        #view { display: none; background: white; padding: 40px; border-radius: 15px; width: 80vw; max-width: 800px; text-align: center; font-size: 24px;}
-    </style>
+<meta charset="UTF-8">
+<title>Smart Home — Pantalla</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #080c14;
+    --surface:  #0e1520;
+    --surface2: #141d2e;
+    --border:   #1e2d45;
+    --accent:   #00d4ff;
+    --accent2:  #7c3aed;
+    --green:    #00ff88;
+    --yellow:   #ffd600;
+    --red:      #ff4b6e;
+    --text:     #e2e8f0;
+    --muted:    #4a5a72;
+    --glow:     0 0 30px rgba(0,212,255,.3);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Space Grotesk', sans-serif; color: var(--text); }
+
+  /* ── background grid lines ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  #app { width: 100vw; height: 100vh; position: relative; }
+
+  /* ════════════════════════════════
+     HEADER
+  ════════════════════════════════ */
+  #header {
+    position: fixed; top: 0; left: 0; right: 0; height: 64px;
+    background: linear-gradient(90deg, var(--surface), var(--surface2));
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 32px;
+    z-index: 100; gap: 20px;
+  }
+  #header .logo {
+    font-family: 'Orbitron', monospace; font-size: 1.1rem; font-weight: 900;
+    letter-spacing: .15em; color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,212,255,.6);
+  }
+  #header .sep { flex: 1; }
+  #header .clock {
+    font-family: 'Orbitron', monospace; font-size: 1.4rem; font-weight: 700;
+    color: var(--text); letter-spacing: .1em;
+  }
+  #header .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+  #header .conn-label { font-size: .75rem; color: var(--muted); letter-spacing: .05em; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ════════════════════════════════
+     GRID VIEW
+  ════════════════════════════════ */
+  #grid-view {
+    position: absolute; inset: 64px 0 0 0;
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: 20px; padding: 24px;
+    transition: opacity .4s, transform .4s;
+  }
+
+  .section-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    position: relative; overflow: hidden;
+    cursor: pointer;
+    transition: border-color .3s, transform .3s, box-shadow .3s;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .section-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: 20px;
+    opacity: 0; transition: opacity .3s;
+    background: radial-gradient(circle at 30% 30%, rgba(0,212,255,.07), transparent 70%);
+  }
+  .section-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,255,.2), var(--glow), inset 0 0 40px rgba(0,212,255,.03);
+    transform: scale(1.01);
+  }
+  .section-card.active::before { opacity: 1; }
+
+  .card-icon { font-size: 3.5rem; line-height: 1; }
+  .card-title {
+    font-family: 'Orbitron', monospace; font-size: 1.5rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+  }
+  .card-subtitle { font-size: .85rem; color: var(--muted); font-weight: 400; }
+  .card-stats {
+    margin-top: auto; display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 14px;
+    font-size: .78rem; font-weight: 600; letter-spacing: .05em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .stat-dot.green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .stat-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+  .stat-dot.red    { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .stat-dot.blue   { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+  .cursor-arrow {
+    position: absolute; right: 24px; top: 24px;
+    font-size: 1.3rem; opacity: 0; transition: opacity .3s;
+    color: var(--accent);
+  }
+  .section-card.active .cursor-arrow { opacity: 1; animation: blink .8s infinite; }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+
+  /* ════════════════════════════════
+     SECTION VIEWS (detail)
+  ════════════════════════════════ */
+  #section-view {
+    position: absolute; inset: 64px 0 0 0;
+    padding: 28px 32px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .4s, transform .4s;
+    transform: translateY(20px);
+    overflow: hidden;
+  }
+  #section-view.visible {
+    opacity: 1; pointer-events: all; transform: translateY(0);
+  }
+  #grid-view.hidden { opacity: 0; pointer-events: none; transform: scale(.97); }
+
+  .section-header {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+  }
+  .section-header .back-hint {
+    font-size: .78rem; color: var(--muted); letter-spacing: .05em;
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+  }
+  .section-header h2 {
+    font-family: 'Orbitron', monospace; font-size: 1.6rem; font-weight: 700;
+    letter-spacing: .1em; color: var(--accent);
+  }
+  .section-header .section-icon { font-size: 2rem; }
+
+  /* ── Lights ── */
+  #lights-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    height: calc(100vh - 200px);
+  }
+  .light-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    position: relative; transition: all .3s; overflow: hidden;
+  }
+  .light-card.on {
+    border-color: rgba(255,214,0,.4);
+    background: linear-gradient(135deg, var(--surface), rgba(255,214,0,.05));
+    box-shadow: 0 0 24px rgba(255,214,0,.15);
+  }
+  .light-card.active-cursor {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,255,.3), var(--glow);
+    transform: scale(1.03);
+  }
+  .light-icon { font-size: 2.8rem; transition: filter .3s; }
+  .light-card.on .light-icon { filter: drop-shadow(0 0 12px gold); }
+  .light-room { font-size: .75rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .light-name { font-weight: 600; font-size: .95rem; text-align: center; }
+  .light-toggle {
+    width: 44px; height: 24px; border-radius: 12px;
+    background: var(--surface2); border: 1px solid var(--border);
+    position: relative; transition: background .3s;
+    margin-top: 4px;
+  }
+  .light-card.on .light-toggle { background: var(--yellow); border-color: var(--yellow); }
+  .light-toggle::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; transition: transform .3s;
+  }
+  .light-card.on .light-toggle::after { transform: translateX(20px); }
+
+  /* ── Tasks ── */
+  #tasks-container {
+    display: flex; gap: 20px; height: calc(100vh - 200px); overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #tasks-container::-webkit-scrollbar { display: none; }
+  .person-column {
+    min-width: 260px; flex: 1; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 20px; display: flex; flex-direction: column; gap: 10px;
+    overflow-y: auto; scrollbar-width: none;
+  }
+  .person-column::-webkit-scrollbar { display: none; }
+  .person-header {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 12px; border-bottom: 1px solid var(--border);
+    margin-bottom: 4px; position: sticky; top: 0;
+    background: var(--surface);
+  }
+  .person-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .9rem; letter-spacing: .05em;
+  }
+  .person-name { font-weight: 600; font-size: 1rem; }
+  .person-count { margin-left: auto; font-size: .75rem; color: var(--muted); }
+
+  .task-item {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    display: flex; align-items: flex-start; gap: 10px;
+    transition: all .3s; cursor: pointer;
+  }
+  .task-item.done { opacity: .45; }
+  .task-item.active-cursor {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(0,212,255,.2);
+    background: rgba(0,212,255,.04);
+  }
+  .task-check {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 2px solid var(--muted); flex-shrink: 0; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .3s; font-size: .6rem;
+  }
+  .task-item.done .task-check { background: var(--green); border-color: var(--green); color: #000; }
+  .task-text { flex: 1; font-size: .88rem; line-height: 1.4; }
+  .task-item.done .task-text { text-decoration: line-through; }
+  .task-priority {
+    font-size: .65rem; padding: 2px 7px; border-radius: 4px;
+    font-weight: 700; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0;
+  }
+  .task-priority.alta   { background: rgba(255,75,110,.15);  color: var(--red);    border: 1px solid rgba(255,75,110,.3); }
+  .task-priority.media  { background: rgba(255,214,0,.12);   color: var(--yellow); border: 1px solid rgba(255,214,0,.3); }
+  .task-priority.baja   { background: rgba(0,255,136,.1);    color: var(--green);  border: 1px solid rgba(0,255,136,.25); }
+
+  /* ── Objects ── */
+  #objects-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    height: calc(100vh - 200px);
+  }
+  .object-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px 20px;
+    display: flex; flex-direction: column; gap: 10px;
+    position: relative; transition: all .3s; overflow: hidden;
+  }
+  .object-card.active-state {
+    border-color: rgba(124,58,237,.5);
+    background: linear-gradient(135deg, var(--surface), rgba(124,58,237,.05));
+    box-shadow: 0 0 20px rgba(124,58,237,.15);
+  }
+  .object-card.active-cursor {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,255,.3), var(--glow);
+    transform: scale(1.03);
+  }
+  .obj-icon { font-size: 2.4rem; }
+  .obj-name { font-weight: 600; font-size: .95rem; }
+  .obj-value { font-size: .82rem; color: var(--muted); }
+  .obj-status {
+    margin-top: auto; font-size: .72rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .obj-status .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .obj-status.on .dot  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .obj-status.off .dot { background: var(--muted); }
+
+  /* ── Payments ── */
+  #payments-list {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    height: calc(100vh - 200px); overflow-y: auto; align-content: start;
+    scrollbar-width: none;
+  }
+  #payments-list::-webkit-scrollbar { display: none; }
+  .payment-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all .3s;
+  }
+  .payment-item.paid { opacity: .5; }
+  .payment-item.active-cursor {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(0,212,255,.2);
+    background: rgba(0,212,255,.03);
+  }
+  .pay-icon-wrap {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: var(--surface2); display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; flex-shrink: 0;
+  }
+  .pay-info { flex: 1; }
+  .pay-name { font-weight: 600; font-size: .95rem; }
+  .pay-due  { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+  .pay-category {
+    font-size: .65rem; padding: 2px 7px; border-radius: 4px;
+    border: 1px solid var(--border); color: var(--muted);
+    letter-spacing: .05em; text-transform: uppercase; font-weight: 600;
+    margin-top: 5px; display: inline-block;
+  }
+  .pay-amount { font-family: 'Orbitron', monospace; font-size: 1rem; font-weight: 700; text-align: right; }
+  .pay-status { font-size: .7rem; margin-top: 4px; text-align: right; font-weight: 600; }
+  .payment-item.paid .pay-status { color: var(--green); }
+  .payment-item:not(.paid) .pay-status { color: var(--red); }
+
+  /* ── Payments summary ── */
+  #pay-summary {
+    display: flex; gap: 14px; margin-bottom: 18px;
+  }
+  .pay-sum-card {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px;
+  }
+  .pay-sum-label { font-size: .72rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .pay-sum-value { font-family: 'Orbitron', monospace; font-size: 1.3rem; font-weight: 700; margin-top: 4px; }
+  .pay-sum-card.pending .pay-sum-value { color: var(--red); }
+  .pay-sum-card.paid    .pay-sum-value { color: var(--green); }
+
+  /* ── tooltip / breadcrumb ── */
+  #breadcrumb {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(14,21,32,.9); border: 1px solid var(--border);
+    border-radius: 40px; padding: 10px 24px;
+    display: flex; gap: 20px; align-items: center;
+    font-size: .75rem; color: var(--muted); letter-spacing: .06em;
+    backdrop-filter: blur(10px);
+    z-index: 200;
+  }
+  #breadcrumb span { display: flex; align-items: center; gap: 6px; }
+  #breadcrumb .key {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 5px; padding: 2px 8px; font-family: monospace;
+    color: var(--accent); font-size: .78rem;
+  }
+
+  /* ── connection overlay ── */
+  #conn-overlay {
+    position: fixed; inset: 0; background: rgba(8,12,20,.95);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 1000; gap: 16px; transition: opacity .5s;
+  }
+  #conn-overlay.hidden { opacity: 0; pointer-events: none; }
+  #conn-overlay .spin {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #conn-overlay p { color: var(--muted); font-size: .9rem; letter-spacing: .08em; }
+
+  /* color avatars per person */
+  .av-Ana    { background: rgba(255,75,110,.2);   color: var(--red);    border: 1px solid rgba(255,75,110,.3); }
+  .av-Carlos { background: rgba(0,212,255,.2);    color: var(--accent); border: 1px solid rgba(0,212,255,.3); }
+  .av-Sofia  { background: rgba(124,58,237,.2);   color: #a78bfa;       border: 1px solid rgba(124,58,237,.3); }
+  .av-Casa   { background: rgba(0,255,136,.15);   color: var(--green);  border: 1px solid rgba(0,255,136,.3); }
+</style>
 </head>
 <body>
-    <div class="grid" id="mainMenu">
-        <div class="card active" id="menu-0">Luces</div>
-        <div class="card" id="menu-1">Tareas</div>
-        <div class="card" id="menu-2">Objetos</div>
-        <div class="card" id="menu-3">Pagos</div>
+
+<!-- connection waiting -->
+<div id="conn-overlay">
+  <div class="spin"></div>
+  <p>ESPERANDO CONEXIÓN...</p>
+</div>
+
+<!-- header -->
+<div id="header">
+  <div class="logo">⌂ SMART HOME</div>
+  <div class="sep"></div>
+  <div class="status-dot" id="dot"></div>
+  <div class="conn-label" id="conn-label">SIN CONEXIÓN</div>
+  <div class="clock" id="clock">--:--:--</div>
+</div>
+
+<div id="app">
+
+  <!-- ── GRID VIEW ── -->
+  <div id="grid-view">
+    <div class="section-card" id="card-lights" onclick="enterSection('lights')">
+      <span class="cursor-arrow">▶</span>
+      <div class="card-icon">💡</div>
+      <div class="card-title">Luces</div>
+      <div class="card-subtitle">Control de iluminación de la casa</div>
+      <div class="card-stats" id="lights-stats"></div>
+    </div>
+    <div class="section-card" id="card-tasks" onclick="enterSection('tasks')">
+      <span class="cursor-arrow">▶</span>
+      <div class="card-icon">✅</div>
+      <div class="card-title">Tareas</div>
+      <div class="card-subtitle">Listado de tareas por persona</div>
+      <div class="card-stats" id="tasks-stats"></div>
+    </div>
+    <div class="section-card" id="card-objects" onclick="enterSection('objects')">
+      <span class="cursor-arrow">▶</span>
+      <div class="card-icon">🏠</div>
+      <div class="card-title">Objetos</div>
+      <div class="card-subtitle">Dispositivos y electrodomésticos</div>
+      <div class="card-stats" id="objects-stats"></div>
+    </div>
+    <div class="section-card" id="card-payments" onclick="enterSection('payments')">
+      <span class="cursor-arrow">▶</span>
+      <div class="card-icon">💳</div>
+      <div class="card-title">Pagos</div>
+      <div class="card-subtitle">Recibos y suscripciones pendientes</div>
+      <div class="card-stats" id="payments-stats"></div>
+    </div>
+  </div>
+
+  <!-- ── SECTION VIEW ── -->
+  <div id="section-view">
+    <!-- Lights -->
+    <div id="view-lights" style="display:none; height:100%;">
+      <div class="section-header">
+        <div class="section-icon">💡</div>
+        <h2>LUCES</h2>
+        <div class="back-hint">← ATRÁS</div>
+      </div>
+      <div id="lights-grid"></div>
     </div>
 
-    <div id="view">
-        <h1 id="viewTitle">Sección</h1>
-        <p id="viewContent">Contenido...</p>
+    <!-- Tasks -->
+    <div id="view-tasks" style="display:none; height:100%;">
+      <div class="section-header">
+        <div class="section-icon">✅</div>
+        <h2>TAREAS</h2>
+        <div class="back-hint">← ATRÁS</div>
+      </div>
+      <div id="tasks-container"></div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        let currentIndex = 0;
-        const totalItems = 4;
-        let inSubMenu = false;
+    <!-- Objects -->
+    <div id="view-objects" style="display:none; height:100%;">
+      <div class="section-header">
+        <div class="section-icon">🏠</div>
+        <h2>OBJETOS</h2>
+        <div class="back-hint">← ATRÁS</div>
+      </div>
+      <div id="objects-grid"></div>
+    </div>
 
-        const menuItems = ['Luces', 'Tareas', 'Objetos', 'Pagos'];
-        
-        function updateSelection() {
-            document.querySelectorAll('.card').forEach(el => el.classList.remove('active'));
-            document.getElementById(`menu-${currentIndex}`).classList.add('active');
-        }
+    <!-- Payments -->
+    <div id="view-payments" style="display:none; height:100%;">
+      <div class="section-header">
+        <div class="section-icon">💳</div>
+        <h2>PAGOS</h2>
+        <div class="back-hint">← ATRÁS</div>
+      </div>
+      <div id="pay-summary"></div>
+      <div id="payments-list"></div>
+    </div>
+  </div>
 
-        socket.on('updateScreen', (command) => {
-            if (!inSubMenu) {
-                // Lógica de navegación en el menú principal (Grid 2x2)
-                if (command === 'right' && currentIndex % 2 === 0) currentIndex++;
-                if (command === 'left' && currentIndex % 2 !== 0) currentIndex--;
-                if (command === 'down' && currentIndex < 2) currentIndex += 2;
-                if (command === 'up' && currentIndex >= 2) currentIndex -= 2;
-                
-                updateSelection();
+</div>
 
-                if (command === 'enter') {
-                    inSubMenu = true;
-                    document.getElementById('mainMenu').style.display = 'none';
-                    document.getElementById('view').style.display = 'block';
-                    document.getElementById('viewTitle').innerText = menuItems[currentIndex];
-                    
-                    // Simular contenido interno
-                    if (currentIndex === 0) document.getElementById('viewContent').innerText = "💡 Luz Salón: ON | 💡 Luz Cocina: OFF";
-                    if (currentIndex === 1) document.getElementById('viewContent').innerText = "Christian: Comprar leche \n Adrián: Sacar basura";
-                }
-            } else {
-                // Si estás dentro de una sección, un 'enter' (o gesto hacia atrás que puedes programar) te saca
-                if (command === 'enter' || command === 'up') {
-                    inSubMenu = false;
-                    document.getElementById('mainMenu').style.display = 'grid';
-                    document.getElementById('view').style.display = 'none';
-                }
-            }
-        });
-    </script>
+<!-- breadcrumb hint -->
+<div id="breadcrumb">
+  <span>📱 Mover móvil para <span class="key">NAVEGAR</span></span>
+  <span>Inclinar hacia pantalla para <span class="key">ENTRAR</span></span>
+  <span>Agitar para <span class="key">ACCIÓN</span></span>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let state = null;
+
+  // ── clock ──
+  setInterval(() => {
+    const d = new Date();
+    document.getElementById('clock').textContent =
+      d.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }, 1000);
+
+  // ── connection ──
+  socket.on('connect', () => {
+    document.getElementById('dot').style.background = 'var(--green)';
+    document.getElementById('conn-label').textContent = 'CONECTADO';
+  });
+  socket.on('disconnect', () => {
+    document.getElementById('dot').style.background = 'var(--red)';
+    document.getElementById('conn-label').textContent = 'SIN CONEXIÓN';
+  });
+
+  socket.on('fullState', s => { state = s; render(s); hideOverlay(); });
+  socket.on('stateUpdate', s => { state = s; render(s); });
+
+  function hideOverlay() {
+    document.getElementById('conn-overlay').classList.add('hidden');
+  }
+
+  // ── RENDER ──
+  function render(s) {
+    if (!s.activeSection) {
+      showGrid(s);
+    } else {
+      showSection(s);
+    }
+  }
+
+  // ── GRID ──
+  function showGrid(s) {
+    const gv = document.getElementById('grid-view');
+    const sv = document.getElementById('section-view');
+    gv.classList.remove('hidden');
+    sv.classList.remove('visible');
+    ['lights','tasks','objects','payments'].forEach(sec => {
+      document.getElementById('view-' + sec).style.display = 'none';
+    });
+
+    const sections = ['lights','tasks','objects','payments'];
+    const activeIdx = s.cursor.y * 2 + s.cursor.x;
+    sections.forEach((sec, i) => {
+      const card = document.getElementById('card-' + sec);
+      card.classList.toggle('active', i === activeIdx);
+    });
+
+    // update stat chips
+    renderLightsStats(s);
+    renderTasksStats(s);
+    renderObjectsStats(s);
+    renderPaymentsStats(s);
+  }
+
+  function renderLightsStats(s) {
+    const on = s.lights.filter(l => l.on).length;
+    document.getElementById('lights-stats').innerHTML = `
+      <div class="stat-chip"><div class="stat-dot yellow"></div>${on} Encendidas</div>
+      <div class="stat-chip"><div class="stat-dot blue"></div>${s.lights.length - on} Apagadas</div>
+    `;
+  }
+  function renderTasksStats(s) {
+    const done = s.tasks.filter(t => t.done).length;
+    const alta = s.tasks.filter(t => !t.done && t.priority === 'alta').length;
+    document.getElementById('tasks-stats').innerHTML = `
+      <div class="stat-chip"><div class="stat-dot green"></div>${done} Hechas</div>
+      <div class="stat-chip"><div class="stat-dot red"></div>${alta} Urgentes</div>
+    `;
+  }
+  function renderObjectsStats(s) {
+    const active = s.objects.filter(o => o.active).length;
+    document.getElementById('objects-stats').innerHTML = `
+      <div class="stat-chip"><div class="stat-dot green"></div>${active} Activos</div>
+      <div class="stat-chip"><div class="stat-dot blue"></div>${s.objects.length} Total</div>
+    `;
+  }
+  function renderPaymentsStats(s) {
+    const pending = s.payments.filter(p => !p.paid).length;
+    const amount  = s.payments.filter(p => !p.paid).reduce((a,p) => a + p.amount, 0);
+    document.getElementById('payments-stats').innerHTML = `
+      <div class="stat-chip"><div class="stat-dot red"></div>${pending} Pendientes</div>
+      <div class="stat-chip"><div class="stat-dot yellow"></div>${amount.toFixed(2)} €</div>
+    `;
+  }
+
+  // ── SECTION ──
+  function showSection(s) {
+    const gv = document.getElementById('grid-view');
+    const sv = document.getElementById('section-view');
+    gv.classList.add('hidden');
+    sv.classList.add('visible');
+
+    ['lights','tasks','objects','payments'].forEach(sec => {
+      document.getElementById('view-' + sec).style.display = 'none';
+    });
+    document.getElementById('view-' + s.activeSection).style.display = 'block';
+
+    switch(s.activeSection) {
+      case 'lights':   renderLights(s);   break;
+      case 'tasks':    renderTasks(s);    break;
+      case 'objects':  renderObjects(s);  break;
+      case 'payments': renderPayments(s); break;
+    }
+  }
+
+  function enterSection(sec) { socket.emit('enter'); }
+
+  // ── LIGHTS VIEW ──
+  function renderLights(s) {
+    const g = document.getElementById('lights-grid');
+    g.innerHTML = s.lights.map((l, i) => `
+      <div class="light-card ${l.on ? 'on' : ''} ${i === s.lightsCursor ? 'active-cursor' : ''}">
+        <div class="light-room">${l.room}</div>
+        <div class="light-icon">${l.icon}</div>
+        <div class="light-name">${l.name}</div>
+        <div class="light-toggle"></div>
+      </div>
+    `).join('');
+    // scroll active into view
+    const cards = g.querySelectorAll('.light-card');
+    if (cards[s.lightsCursor]) cards[s.lightsCursor].scrollIntoView({block:'nearest', behavior:'smooth'});
+  }
+
+  // ── TASKS VIEW ──
+  function renderTasks(s) {
+    const container = document.getElementById('tasks-container');
+    const persons = [...new Set(s.tasks.map(t => t.person))];
+    const avatarInitial = p => p.charAt(0);
+    container.innerHTML = persons.map(person => {
+      const personTasks = s.tasks.filter(t => t.person === person);
+      const doneCount = personTasks.filter(t => t.done).length;
+      return `
+        <div class="person-column">
+          <div class="person-header">
+            <div class="person-avatar av-${person.replace('í','i').replace('ó','o')}">${avatarInitial(person)}</div>
+            <div class="person-name">${person}</div>
+            <div class="person-count">${doneCount}/${personTasks.length}</div>
+          </div>
+          ${personTasks.map(t => {
+            const globalIdx = s.tasks.indexOf(t);
+            return `
+              <div class="task-item ${t.done ? 'done' : ''} ${globalIdx === s.tasksCursor ? 'active-cursor' : ''}">
+                <div class="task-check">${t.done ? '✓' : ''}</div>
+                <div class="task-text">${t.text}</div>
+                <div class="task-priority ${t.priority}">${t.priority}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── OBJECTS VIEW ──
+  function renderObjects(s) {
+    const g = document.getElementById('objects-grid');
+    g.innerHTML = s.objects.map((o, i) => `
+      <div class="object-card ${o.active ? 'active-state' : ''} ${i === s.objectsCursor ? 'active-cursor' : ''}">
+        <div class="obj-icon">${o.icon}</div>
+        <div class="obj-name">${o.name}</div>
+        <div class="obj-value">${o.value}</div>
+        <div class="obj-status ${o.active ? 'on' : 'off'}">
+          <div class="dot"></div>
+          ${o.active ? 'Activo' : 'Inactivo'}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── PAYMENTS VIEW ──
+  function renderPayments(s) {
+    const totalPending = s.payments.filter(p => !p.paid).reduce((a,p) => a + p.amount, 0);
+    const totalPaid    = s.payments.filter(p =>  p.paid).reduce((a,p) => a + p.amount, 0);
+    document.getElementById('pay-summary').innerHTML = `
+      <div class="pay-sum-card pending">
+        <div class="pay-sum-label">Pendiente este mes</div>
+        <div class="pay-sum-value">${totalPending.toFixed(2)} €</div>
+      </div>
+      <div class="pay-sum-card paid">
+        <div class="pay-sum-label">Pagado</div>
+        <div class="pay-sum-value">${totalPaid.toFixed(2)} €</div>
+      </div>
+    `;
+
+    document.getElementById('payments-list').innerHTML = s.payments.map((p, i) => `
+      <div class="payment-item ${p.paid ? 'paid' : ''} ${i === s.paymentsCursor ? 'active-cursor' : ''}">
+        <div class="pay-icon-wrap">${p.icon}</div>
+        <div class="pay-info">
+          <div class="pay-name">${p.name}</div>
+          <div class="pay-due">📅 ${p.due}</div>
+          <div class="pay-category">${p.category}</div>
+        </div>
+        <div>
+          <div class="pay-amount">${p.amount.toFixed(2)} €</div>
+          <div class="pay-status">${p.paid ? '✓ Pagado' : '● Pendiente'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── keyboard fallback ──
+  document.addEventListener('keydown', e => {
+    const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+    if (map[e.key]) socket.emit('navigate', map[e.key]);
+    if (e.key === 'Enter' || e.key === ' ') socket.emit(state?.activeSection ? 'action' : 'enter');
+    if (e.key === 'Escape' || e.key === 'Backspace') socket.emit('back');
+  });
+</script>
 </body>
 </html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Smart Home — Mando</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #060a10;
+    --surface: #0c1320;
+    --border:  #1a2840;
+    --accent:  #00d4ff;
+    --green:   #00ff88;
+    --red:     #ff4b6e;
+    --yellow:  #ffd600;
+    --text:    #e2e8f0;
+    --muted:   #3a4d63;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { height: 100%; }
+  body {
+    height: 100%; min-height: 100dvh;
+    background: var(--bg); font-family: 'Space Grotesk', sans-serif;
+    color: var(--text); overflow: hidden; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(0,212,255,.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ── wrapper ── */
+  #wrapper {
+    height: 100dvh; display: flex; flex-direction: column;
+    align-items: center; padding: 20px 16px;
+    gap: 14px;
+  }
+
+  /* ── header ── */
+  #mob-header {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 4px;
+  }
+  #mob-header .logo {
+    font-family: 'Orbitron', monospace; font-size: .85rem; font-weight: 900;
+    color: var(--accent); letter-spacing: .12em;
+    text-shadow: 0 0 16px rgba(0,212,255,.5);
+  }
+  #conn-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: .72rem; color: var(--muted); letter-spacing: .05em;
+  }
+  #conn-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--red); transition: background .3s;
+  }
+  #conn-dot.on  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+  /* ── info panel ── */
+  #info-panel {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 18px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  #panel-section {
+    font-family: 'Orbitron', monospace; font-size: .78rem; font-weight: 700;
+    color: var(--accent); letter-spacing: .1em; text-transform: uppercase;
+  }
+  #panel-item {
+    font-size: .88rem; color: var(--text); font-weight: 500;
+  }
+
+  /* ── gyro mode toggle ── */
+  #mode-toggle {
+    width: 100%; display: flex; gap: 8px;
+  }
+  .mode-btn {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px; text-align: center;
+    font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); cursor: pointer; transition: all .2s;
+  }
+  .mode-btn.active {
+    background: rgba(0,212,255,.1); border-color: var(--accent); color: var(--accent);
+  }
+
+  /* ── GYRO indicator ── */
+  #gyro-area {
+    width: 100%; flex: 1;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #gyro-area.hidden { display: none; }
+  #gyro-bubble {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(0,212,255,.9), rgba(0,212,255,.4));
+    box-shadow: 0 0 30px rgba(0,212,255,.5);
+    position: absolute;
+    transition: left .1s, top .1s;
+  }
+  #gyro-center {
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid rgba(0,212,255,.3);
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%,-50%);
+  }
+  #gyro-crosshair {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  #gyro-crosshair::before,
+  #gyro-crosshair::after {
+    content: ''; position: absolute; background: rgba(0,212,255,.08);
+  }
+  #gyro-crosshair::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+  #gyro-crosshair::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+
+  .gyro-label {
+    position: absolute; font-size: .65rem; color: var(--muted);
+    letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
+  }
+  .gyro-label.top    { top: 12px; left: 50%; transform: translateX(-50%); }
+  .gyro-label.bottom { bottom: 12px; left: 50%; transform: translateX(-50%); }
+  .gyro-label.left   { left: 12px; top: 50%; transform: translateY(-50%); }
+  .gyro-label.right  { right: 12px; top: 50%; transform: translateY(-50%); }
+
+  #gyro-action-hint {
+    position: absolute; bottom: 16px; left: 0; right: 0;
+    text-align: center; font-size: .72rem; color: var(--muted); letter-spacing: .05em;
+  }
+
+  /* ── BUTTONS area ── */
+  #buttons-area {
+    width: 100%; flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+  }
+  #buttons-area.hidden { display: none; }
+
+  .btn-row { display: flex; gap: 10px; align-items: center; }
+
+  .nav-btn {
+    width: 72px; height: 72px; border-radius: 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; cursor: pointer; transition: all .15s;
+    -webkit-tap-highlight-color: transparent;
+    position: relative; overflow: hidden;
+  }
+  .nav-btn:active, .nav-btn.pressed {
+    background: rgba(0,212,255,.15); border-color: var(--accent);
+    transform: scale(.94);
+    box-shadow: 0 0 20px rgba(0,212,255,.3);
+  }
+
+  /* ── action buttons ── */
+  #action-row {
+    width: 100%; display: flex; gap: 10px; margin-top: 4px;
+  }
+  .action-btn {
+    flex: 1; height: 56px; border-radius: 14px;
+    border: 1px solid var(--border); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-weight: 700; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase;
+    transition: all .15s; -webkit-tap-highlight-color: transparent;
+  }
+  .action-btn:active { transform: scale(.96); }
+  #btn-enter {
+    background: rgba(0,212,255,.1); border-color: rgba(0,212,255,.4); color: var(--accent);
+  }
+  #btn-enter:active { background: rgba(0,212,255,.25); box-shadow: 0 0 20px rgba(0,212,255,.3); }
+  #btn-action {
+    background: rgba(0,255,136,.1); border-color: rgba(0,255,136,.4); color: var(--green);
+  }
+  #btn-action:active { background: rgba(0,255,136,.25); box-shadow: 0 0 20px rgba(0,255,136,.3); }
+  #btn-back {
+    flex: .5; background: rgba(255,75,110,.08); border-color: rgba(255,75,110,.3); color: var(--red);
+    font-size: .7rem;
+  }
+  #btn-back:active { background: rgba(255,75,110,.2); }
+
+  /* ── gyro permission ── */
+  #gyro-permission {
+    position: absolute; inset: 0; border-radius: 20px;
+    background: rgba(6,10,16,.9);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px; z-index: 10;
+  }
+  #gyro-permission p { font-size: .82rem; color: var(--muted); text-align: center; padding: 0 24px; }
+  #grant-btn {
+    background: rgba(0,212,255,.15); border: 1px solid var(--accent);
+    color: var(--accent); border-radius: 10px; padding: 10px 24px;
+    font-weight: 700; font-size: .82rem; letter-spacing: .08em;
+    text-transform: uppercase; cursor: pointer;
+  }
+  #gyro-permission.hidden { display: none; }
+
+  /* ── last command flash ── */
+  #last-cmd {
+    font-family: 'Orbitron', monospace; font-size: .72rem;
+    color: var(--muted); letter-spacing: .1em; text-transform: uppercase;
+    height: 18px; text-align: center;
+    transition: color .1s;
+  }
+  #last-cmd.flash { color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="wrapper">
+
+  <!-- header -->
+  <div id="mob-header">
+    <div class="logo">⌂ MANDO</div>
+    <div id="conn-status">
+      <div id="conn-dot"></div>
+      <span id="conn-text">Conectando...</span>
+    </div>
+  </div>
+
+  <!-- info panel -->
+  <div id="info-panel">
+    <div id="panel-section">— Inicio</div>
+    <div id="panel-item">Selecciona una sección</div>
+  </div>
+
+  <!-- mode toggle -->
+  <div id="mode-toggle">
+    <div class="mode-btn active" id="mode-gyro" onclick="setMode('gyro')">📐 Giroscopio</div>
+    <div class="mode-btn" id="mode-buttons" onclick="setMode('buttons')">🕹️ Botones</div>
+  </div>
+
+  <!-- GYRO AREA -->
+  <div id="gyro-area">
+    <div id="gyro-permission">
+      <p>Para usar el giroscopio, necesitamos permiso de movimiento del dispositivo.</p>
+      <button id="grant-btn" onclick="requestGyro()">Activar Giroscopio</button>
+      <p style="font-size:.7rem">En iOS activa en: Ajustes → Safari → Movimiento y orientación</p>
+    </div>
+    <div id="gyro-crosshair"></div>
+    <div class="gyro-label top">ARRIBA</div>
+    <div class="gyro-label bottom">ABAJO</div>
+    <div class="gyro-label left">IZQ</div>
+    <div class="gyro-label right">DER</div>
+    <div id="gyro-bubble"></div>
+    <div id="gyro-center"></div>
+    <div id="gyro-action-hint">Inclina hacia la pantalla → ENTRAR</div>
+  </div>
+
+  <!-- BUTTONS AREA -->
+  <div id="buttons-area" class="hidden">
+    <div class="btn-row">
+      <div class="nav-btn" id="b-up" onpointerdown="navSend('up')" ontouchstart="navSend('up')">▲</div>
+    </div>
+    <div class="btn-row">
+      <div class="nav-btn" id="b-left"  onpointerdown="navSend('left')"  ontouchstart="navSend('left')">◀</div>
+      <div class="nav-btn" id="b-center" onpointerdown="sendAction()" ontouchstart="sendAction()" style="font-size:1.2rem">⚡</div>
+      <div class="nav-btn" id="b-right" onpointerdown="navSend('right')" ontouchstart="navSend('right')">▶</div>
+    </div>
+    <div class="btn-row">
+      <div class="nav-btn" id="b-down" onpointerdown="navSend('down')" ontouchstart="navSend('down')">▼</div>
+    </div>
+  </div>
+
+  <!-- action buttons (always visible) -->
+  <div id="action-row">
+    <div class="action-btn" id="btn-back"   onclick="sendBack()">✕ Atrás</div>
+    <div class="action-btn" id="btn-enter"  onclick="sendEnter()">↩ Entrar</div>
+    <div class="action-btn" id="btn-action" onclick="sendAction()">⚡ Acción</div>
+  </div>
+
+  <!-- last command -->
+  <div id="last-cmd">· · ·</div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let mode = 'gyro';
+  let gyroActive = false;
+  let lastDir = null;
+  let lastDirTime = 0;
+  const THRESHOLD_DEG = 12;   // degrees to trigger
+  const COOLDOWN_MS   = 280;  // ms between nav events
+  let lastShakeTime = 0;
+  let shakeAccumX = 0;
+
+  // ── Connection ──
+  socket.on('connect', () => {
+    document.getElementById('conn-dot').classList.add('on');
+    document.getElementById('conn-text').textContent = 'Conectado';
+  });
+  socket.on('disconnect', () => {
+    document.getElementById('conn-dot').classList.remove('on');
+    document.getElementById('conn-text').textContent = 'Sin conexión';
+  });
+
+  socket.on('stateUpdate', updateInfo);
+  socket.on('fullState', updateInfo);
+
+  function updateInfo(s) {
+    const sectionNames = { lights:'💡 Luces', tasks:'✅ Tareas', objects:'🏠 Objetos', payments:'💳 Pagos', null:'— Inicio' };
+    document.getElementById('panel-section').textContent = sectionNames[s.activeSection] || '— Inicio';
+
+    if (!s.activeSection) {
+      const sections = ['lights','tasks','objects','payments'];
+      const names    = ['Luces', 'Tareas', 'Objetos', 'Pagos'];
+      const idx = s.cursor.y * 2 + s.cursor.x;
+      document.getElementById('panel-item').textContent = '▶ ' + names[idx];
+    } else {
+      const lists = { lights: s.lights, tasks: s.tasks, objects: s.objects, payments: s.payments };
+      const cursors = { lights: s.lightsCursor, tasks: s.tasksCursor, objects: s.objectsCursor, payments: s.paymentsCursor };
+      const list = lists[s.activeSection];
+      const cur  = cursors[s.activeSection];
+      if (list && list[cur]) {
+        const item = list[cur];
+        const label = item.name || item.text || '—';
+        document.getElementById('panel-item').textContent = '▶ ' + label;
+      }
+    }
+  }
+
+  // ── Mode switch ──
+  function setMode(m) {
+    mode = m;
+    document.getElementById('mode-gyro').classList.toggle('active', m === 'gyro');
+    document.getElementById('mode-buttons').classList.toggle('active', m === 'buttons');
+    document.getElementById('gyro-area').classList.toggle('hidden', m === 'buttons');
+    document.getElementById('buttons-area').classList.toggle('hidden', m === 'gyro');
+  }
+
+  // ── Gyro ──
+  function requestGyro() {
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(perm => {
+          if (perm === 'granted') startGyro();
+        })
+        .catch(console.error);
+    } else {
+      startGyro();
+    }
+  }
+
+  function startGyro() {
+    document.getElementById('gyro-permission').classList.add('hidden');
+    gyroActive = true;
+    window.addEventListener('deviceorientation', handleOrientation, true);
+    window.addEventListener('devicemotion', handleMotion, true);
+  }
+
+  // try auto-start on non-iOS
+  if (typeof DeviceOrientationEvent !== 'undefined') {
+    if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
+      // Android / non-Safari: start directly
+      startGyro();
+    }
+  }
+
+  let baseGamma = null, baseBeta = null;
+  let calibrating = true;
+  setTimeout(() => { calibrating = false; }, 1500);
+
+  function handleOrientation(e) {
+    // gamma = left/right tilt, beta = front/back tilt
+    const gamma = e.gamma || 0;   // -90 to 90
+    const beta  = e.beta  || 0;   // -180 to 180
+
+    if (calibrating) { baseGamma = gamma; baseBeta = beta; return; }
+
+    const dGamma = gamma - (baseGamma || 0);
+    const dBeta  = beta  - (baseBeta  || 0);
+
+    // move bubble
+    const area = document.getElementById('gyro-area');
+    const w = area.clientWidth, h = area.clientHeight;
+    const bx = Math.max(30, Math.min(w - 30, w/2 + (dGamma / 30) * w/2));
+    const by = Math.max(30, Math.min(h - 30, h/2 + (dBeta  / 30) * h/2));
+    const bubble = document.getElementById('gyro-bubble');
+    bubble.style.left = (bx - 30) + 'px';
+    bubble.style.top  = (by - 30) + 'px';
+
+    // detect direction
+    const now = Date.now();
+    if (now - lastDirTime < COOLDOWN_MS) return;
+
+    let dir = null;
+    if (Math.abs(dGamma) > Math.abs(dBeta)) {
+      if      (dGamma >  THRESHOLD_DEG) dir = 'right';
+      else if (dGamma < -THRESHOLD_DEG) dir = 'left';
+    } else {
+      if      (dBeta  >  THRESHOLD_DEG) dir = 'down';
+      else if (dBeta  < -THRESHOLD_DEG) dir = 'up';
+    }
+
+    // "push toward screen" = forward tilt, gamma near 0 and beta decreasing sharply
+    // We use a separate gesture: phone tilted face-down (beta < -60) = ENTER
+    if (beta < -60 && now - lastDirTime > 800) {
+      sendEnter(); lastDirTime = now; return;
+    }
+
+    if (dir && dir !== lastDir) {
+      lastDir = dir;
+      navSend(dir);
+      lastDirTime = now;
+    } else if (!dir) {
+      lastDir = null;
+    }
+  }
+
+  // Shake to action
+  function handleMotion(e) {
+    const acc = e.accelerationIncludingGravity;
+    if (!acc) return;
+    const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
+    const now = Date.now();
+    if (total > 30 && now - lastShakeTime > 600) {
+      lastShakeTime = now;
+      sendAction();
+    }
+  }
+
+  // ── Send events ──
+  function navSend(dir) {
+    socket.emit('navigate', dir);
+    flash('↑↓←→ ' + dir.toUpperCase());
+    flashBtn('b-' + dir);
+    navigator.vibrate && navigator.vibrate(20);
+  }
+  function sendEnter() {
+    socket.emit('enter');
+    flash('↩ ENTRAR');
+    navigator.vibrate && navigator.vibrate([30, 20, 30]);
+  }
+  function sendBack() {
+    socket.emit('back');
+    flash('✕ ATRÁS');
+    navigator.vibrate && navigator.vibrate(40);
+  }
+  function sendAction() {
+    socket.emit('action');
+    flash('⚡ ACCIÓN');
+    navigator.vibrate && navigator.vibrate([20, 10, 20, 10, 30]);
+  }
+
+  function flash(msg) {
+    const el = document.getElementById('last-cmd');
+    el.textContent = msg;
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 400);
+  }
+  function flashBtn(id) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 200);
+  }
+</script>
+</body>
+</html>

@@ -3,386 +3,409 @@
 <head>
 <meta charset="UTF-8">
 <title>Smart Home — Pantalla</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:       #080c14;
-    --surface:  #0e1520;
-    --surface2: #141d2e;
-    --border:   #1e2d45;
-    --accent:   #00d4ff;
-    --accent2:  #7c3aed;
-    --green:    #00ff88;
-    --yellow:   #ffd600;
-    --red:      #ff4b6e;
-    --text:     #e2e8f0;
-    --muted:    #4a5a72;
-    --glow:     0 0 30px rgba(0,212,255,.3);
+    --bg:       #0f0d0a;
+    --surface:  #161310;
+    --surface2: #1e1a15;
+    --surface3: #26211a;
+    --border:   #2e2720;
+    --border2:  #3d3228;
+    --amber:    #e8a045;
+    --amber2:   #c47a20;
+    --amber3:   #f5c070;
+    --copper:   #b86a2e;
+    --cream:    #f0e6d0;
+    --muted:    #7a6a55;
+    --muted2:   #5a4e3d;
+    --green:    #7ec98a;
+    --red:      #e06060;
+    --text:     #e8dcc8;
+    --glow:     0 0 28px rgba(232,160,69,.2);
+    --glow2:    0 0 12px rgba(232,160,69,.12);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: 'Space Grotesk', sans-serif; color: var(--text); }
+  html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); }
 
-  /* ── background grid lines ── */
+  /* grain overlay */
   body::before {
-    content: '';
-    position: fixed; inset: 0;
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+    opacity: 0.4;
+  }
+  /* warm grid */
+  body::after {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
     background-image:
-      linear-gradient(rgba(0,212,255,.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,212,255,.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
+      linear-gradient(rgba(232,160,69,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,160,69,.025) 1px, transparent 1px);
+    background-size: 56px 56px;
   }
 
-  #app { width: 100vw; height: 100vh; position: relative; }
+  #app { width:100vw; height:100vh; position:relative; z-index:1; }
 
-  /* ════════════════════════════════
-     HEADER
-  ════════════════════════════════ */
+  /* ── HEADER ── */
   #header {
-    position: fixed; top: 0; left: 0; right: 0; height: 64px;
-    background: linear-gradient(90deg, var(--surface), var(--surface2));
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; padding: 0 32px;
-    z-index: 100; gap: 20px;
+    position:fixed; top:0; left:0; right:0; height:62px;
+    background:linear-gradient(90deg, var(--surface), var(--surface2));
+    border-bottom:1px solid var(--border2);
+    display:flex; align-items:center; padding:0 32px;
+    z-index:100; gap:20px;
   }
   #header .logo {
-    font-family: 'Orbitron', monospace; font-size: 1.1rem; font-weight: 900;
-    letter-spacing: .15em; color: var(--accent);
-    text-shadow: 0 0 20px rgba(0,212,255,.6);
+    font-family:'Cinzel',serif; font-size:1rem; font-weight:700;
+    letter-spacing:.22em; color:var(--amber);
+    text-shadow: 0 0 24px rgba(232,160,69,.5);
   }
-  #header .sep { flex: 1; }
+  #header .sep { flex:1; }
   #header .clock {
-    font-family: 'Orbitron', monospace; font-size: 1.4rem; font-weight: 700;
-    color: var(--text); letter-spacing: .1em;
+    font-family:'DM Mono',monospace; font-size:1.35rem; font-weight:500;
+    color:var(--cream); letter-spacing:.1em; opacity:.9;
   }
   #header .status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--green); box-shadow: 0 0 8px var(--green);
-    animation: pulse 2s infinite;
+    width:7px; height:7px; border-radius:50%;
+    background:var(--green); box-shadow:0 0 8px var(--green);
+    animation:pulse 2.5s infinite;
   }
-  #header .conn-label { font-size: .75rem; color: var(--muted); letter-spacing: .05em; }
+  #header .conn-label { font-size:.72rem; color:var(--muted); letter-spacing:.06em; font-weight:500; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-
-  /* ════════════════════════════════
-     GRID VIEW
-  ════════════════════════════════ */
+  /* ── GRID VIEW ── */
   #grid-view {
-    position: absolute; inset: 64px 0 0 0;
-    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
-    gap: 20px; padding: 24px;
-    transition: opacity .4s, transform .4s;
+    position:absolute; inset:62px 0 0 0;
+    display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;
+    gap:18px; padding:22px;
+    transition:opacity .35s, transform .35s;
   }
 
   .section-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 32px;
-    position: relative; overflow: hidden;
-    cursor: pointer;
-    transition: border-color .3s, transform .3s, box-shadow .3s;
-    display: flex; flex-direction: column; gap: 16px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:18px; padding:30px;
+    position:relative; overflow:hidden; cursor:pointer;
+    transition:border-color .3s, transform .3s, box-shadow .3s;
+    display:flex; flex-direction:column; gap:14px;
   }
   .section-card::before {
-    content: ''; position: absolute; inset: 0; border-radius: 20px;
-    opacity: 0; transition: opacity .3s;
-    background: radial-gradient(circle at 30% 30%, rgba(0,212,255,.07), transparent 70%);
+    content:''; position:absolute; inset:0; border-radius:18px; opacity:0;
+    transition:opacity .3s;
+    background:radial-gradient(ellipse at 20% 20%, rgba(232,160,69,.06), transparent 65%);
+  }
+  .section-card::after {
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(232,160,69,.3), transparent);
+    opacity:0; transition:opacity .3s;
   }
   .section-card.active {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,212,255,.2), var(--glow), inset 0 0 40px rgba(0,212,255,.03);
-    transform: scale(1.01);
+    border-color:var(--amber2);
+    box-shadow: 0 0 0 1px rgba(232,160,69,.15), var(--glow), inset 0 0 50px rgba(232,160,69,.03);
+    transform:scale(1.008);
   }
-  .section-card.active::before { opacity: 1; }
+  .section-card.active::before { opacity:1; }
+  .section-card.active::after  { opacity:1; }
 
-  .card-icon { font-size: 3.5rem; line-height: 1; }
+  .card-icon { font-size:3.2rem; line-height:1; filter:saturate(.8); }
   .card-title {
-    font-family: 'Orbitron', monospace; font-size: 1.5rem; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase;
+    font-family:'Cinzel',serif; font-size:1.35rem; font-weight:600;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--cream);
   }
-  .card-subtitle { font-size: .85rem; color: var(--muted); font-weight: 400; }
-  .card-stats {
-    margin-top: auto; display: flex; gap: 16px; flex-wrap: wrap;
-  }
+  .card-subtitle { font-size:.82rem; color:var(--muted); font-weight:400; line-height:1.5; }
+  .card-stats { margin-top:auto; display:flex; gap:12px; flex-wrap:wrap; }
+
   .stat-chip {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 6px 14px;
-    font-size: .78rem; font-weight: 600; letter-spacing: .05em;
-    display: flex; align-items: center; gap: 6px;
+    background:var(--surface2); border:1px solid var(--border2);
+    border-radius:7px; padding:5px 12px;
+    font-size:.75rem; font-weight:600; letter-spacing:.04em;
+    display:flex; align-items:center; gap:6px; color:var(--muted);
   }
-  .stat-dot { width: 6px; height: 6px; border-radius: 50%; }
-  .stat-dot.green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .stat-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
-  .stat-dot.red    { background: var(--red); box-shadow: 0 0 6px var(--red); }
-  .stat-dot.blue   { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .stat-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+  .stat-dot.green  { background:var(--green);  box-shadow:0 0 5px var(--green); }
+  .stat-dot.amber  { background:var(--amber);  box-shadow:0 0 5px var(--amber); }
+  .stat-dot.red    { background:var(--red);    box-shadow:0 0 5px var(--red); }
+  .stat-dot.copper { background:var(--copper); box-shadow:0 0 5px var(--copper); }
 
   .cursor-arrow {
-    position: absolute; right: 24px; top: 24px;
-    font-size: 1.3rem; opacity: 0; transition: opacity .3s;
-    color: var(--accent);
+    position:absolute; right:22px; top:22px; font-size:1.1rem;
+    opacity:0; transition:opacity .3s; color:var(--amber); font-weight:300;
   }
-  .section-card.active .cursor-arrow { opacity: 1; animation: blink .8s infinite; }
-  @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+  .section-card.active .cursor-arrow { opacity:1; animation:blink .9s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.15} }
 
-  /* ════════════════════════════════
-     SECTION VIEWS (detail)
-  ════════════════════════════════ */
+  /* ── SECTION VIEWS ── */
   #section-view {
-    position: absolute; inset: 64px 0 0 0;
-    padding: 28px 32px;
-    opacity: 0; pointer-events: none;
-    transition: opacity .4s, transform .4s;
-    transform: translateY(20px);
-    overflow: hidden;
+    position:absolute; inset:62px 0 0 0; padding:26px 30px;
+    opacity:0; pointer-events:none;
+    transition:opacity .35s, transform .35s;
+    transform:translateY(16px); overflow:hidden;
   }
-  #section-view.visible {
-    opacity: 1; pointer-events: all; transform: translateY(0);
-  }
-  #grid-view.hidden { opacity: 0; pointer-events: none; transform: scale(.97); }
+  #section-view.visible { opacity:1; pointer-events:all; transform:translateY(0); }
+  #grid-view.hidden     { opacity:0; pointer-events:none; transform:scale(.98); }
 
   .section-header {
-    display: flex; align-items: center; gap: 16px; margin-bottom: 28px;
+    display:flex; align-items:center; gap:14px; margin-bottom:24px;
   }
   .section-header .back-hint {
-    font-size: .78rem; color: var(--muted); letter-spacing: .05em;
-    border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+    font-size:.73rem; color:var(--muted2); letter-spacing:.05em;
+    border:1px solid var(--border); border-radius:5px; padding:3px 9px;
+    font-family:'DM Mono',monospace;
   }
   .section-header h2 {
-    font-family: 'Orbitron', monospace; font-size: 1.6rem; font-weight: 700;
-    letter-spacing: .1em; color: var(--accent);
+    font-family:'Cinzel',serif; font-size:1.5rem; font-weight:600;
+    letter-spacing:.14em; color:var(--amber);
   }
-  .section-header .section-icon { font-size: 2rem; }
+  .section-header .section-icon { font-size:1.8rem; }
 
-  /* ── Lights ── */
+  /* ── LIGHTS ── */
   #lights-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-    height: calc(100vh - 200px);
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+    height:calc(100vh - 190px);
   }
   .light-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 24px 20px;
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-    position: relative; transition: all .3s; overflow: hidden;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:22px 18px;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    position:relative; transition:all .3s; overflow:hidden;
   }
   .light-card.on {
-    border-color: rgba(255,214,0,.4);
-    background: linear-gradient(135deg, var(--surface), rgba(255,214,0,.05));
-    box-shadow: 0 0 24px rgba(255,214,0,.15);
+    border-color:rgba(232,160,69,.35);
+    background:linear-gradient(135deg, var(--surface), rgba(232,160,69,.04));
+    box-shadow:0 0 20px rgba(232,160,69,.1);
   }
   .light-card.active-cursor {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,212,255,.3), var(--glow);
-    transform: scale(1.03);
+    border-color:var(--amber);
+    box-shadow:0 0 0 1px rgba(232,160,69,.25), var(--glow);
+    transform:scale(1.03);
   }
-  .light-icon { font-size: 2.8rem; transition: filter .3s; }
-  .light-card.on .light-icon { filter: drop-shadow(0 0 12px gold); }
-  .light-room { font-size: .75rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-  .light-name { font-weight: 600; font-size: .95rem; text-align: center; }
+  .light-icon { font-size:2.6rem; transition:filter .3s; }
+  .light-card.on .light-icon { filter:drop-shadow(0 0 10px rgba(232,160,69,.7)); }
+  .light-room { font-size:.7rem; color:var(--muted2); letter-spacing:.07em; text-transform:uppercase; font-weight:500; }
+  .light-name { font-weight:600; font-size:.9rem; text-align:center; color:var(--cream); }
   .light-toggle {
-    width: 44px; height: 24px; border-radius: 12px;
-    background: var(--surface2); border: 1px solid var(--border);
-    position: relative; transition: background .3s;
-    margin-top: 4px;
+    width:40px; height:22px; border-radius:11px;
+    background:var(--surface3); border:1px solid var(--border2);
+    position:relative; transition:background .3s; margin-top:2px;
   }
-  .light-card.on .light-toggle { background: var(--yellow); border-color: var(--yellow); }
+  .light-card.on .light-toggle { background:var(--amber2); border-color:var(--amber); }
   .light-toggle::after {
-    content: ''; position: absolute; top: 3px; left: 3px;
-    width: 16px; height: 16px; border-radius: 50%;
-    background: #fff; transition: transform .3s;
+    content:''; position:absolute; top:3px; left:3px;
+    width:14px; height:14px; border-radius:50%;
+    background:#fff; transition:transform .3s; opacity:.9;
   }
-  .light-card.on .light-toggle::after { transform: translateX(20px); }
+  .light-card.on .light-toggle::after { transform:translateX(18px); }
 
-  /* ── Tasks ── */
+  /* ── TASKS ── */
   #tasks-container {
-    display: flex; gap: 20px; height: calc(100vh - 200px); overflow-x: auto;
-    scrollbar-width: none;
+    display:flex; gap:18px; height:calc(100vh - 240px); overflow-x:auto;
+    scrollbar-width:none;
   }
-  #tasks-container::-webkit-scrollbar { display: none; }
+  #tasks-container::-webkit-scrollbar { display:none; }
   .person-column {
-    min-width: 260px; flex: 1; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 16px;
-    padding: 20px; display: flex; flex-direction: column; gap: 10px;
-    overflow-y: auto; scrollbar-width: none;
+    min-width:250px; flex:1; background:var(--surface);
+    border:1px solid var(--border); border-radius:14px;
+    padding:18px; display:flex; flex-direction:column; gap:9px;
+    overflow-y:auto; scrollbar-width:none;
   }
-  .person-column::-webkit-scrollbar { display: none; }
+  .person-column::-webkit-scrollbar { display:none; }
   .person-header {
-    display: flex; align-items: center; gap: 10px;
-    padding-bottom: 12px; border-bottom: 1px solid var(--border);
-    margin-bottom: 4px; position: sticky; top: 0;
-    background: var(--surface);
+    display:flex; align-items:center; gap:9px;
+    padding-bottom:11px; border-bottom:1px solid var(--border);
+    margin-bottom:3px; position:sticky; top:0; background:var(--surface);
   }
   .person-avatar {
-    width: 36px; height: 36px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: .9rem; letter-spacing: .05em;
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:600; font-size:.85rem; letter-spacing:.04em;
   }
-  .person-name { font-weight: 600; font-size: 1rem; }
-  .person-count { margin-left: auto; font-size: .75rem; color: var(--muted); }
+  .person-name { font-weight:600; font-size:.95rem; color:var(--cream); }
+  .person-count { margin-left:auto; font-size:.72rem; color:var(--muted); }
 
   .task-item {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 12px 14px;
-    display: flex; align-items: flex-start; gap: 10px;
-    transition: all .3s; cursor: pointer;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:9px; padding:10px 12px;
+    display:flex; align-items:flex-start; gap:9px;
+    transition:all .3s; cursor:pointer;
   }
-  .task-item.done { opacity: .45; }
+  .task-item.done { opacity:.4; }
   .task-item.active-cursor {
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(0,212,255,.2);
-    background: rgba(0,212,255,.04);
+    border-color:var(--amber2);
+    box-shadow:0 0 10px rgba(232,160,69,.15);
+    background:rgba(232,160,69,.03);
   }
   .task-check {
-    width: 18px; height: 18px; border-radius: 5px;
-    border: 2px solid var(--muted); flex-shrink: 0; margin-top: 1px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .3s; font-size: .6rem;
+    width:16px; height:16px; border-radius:4px;
+    border:1.5px solid var(--muted2); flex-shrink:0; margin-top:2px;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .3s; font-size:.55rem;
   }
-  .task-item.done .task-check { background: var(--green); border-color: var(--green); color: #000; }
-  .task-text { flex: 1; font-size: .88rem; line-height: 1.4; }
-  .task-item.done .task-text { text-decoration: line-through; }
+  .task-item.done .task-check { background:var(--green); border-color:var(--green); color:#0a1a0a; }
+  .task-text { flex:1; font-size:.85rem; line-height:1.45; color:var(--text); }
+  .task-item.done .task-text { text-decoration:line-through; }
   .task-priority {
-    font-size: .65rem; padding: 2px 7px; border-radius: 4px;
-    font-weight: 700; letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0;
+    font-size:.62rem; padding:2px 6px; border-radius:4px;
+    font-weight:600; letter-spacing:.05em; text-transform:uppercase; flex-shrink:0;
+    font-family:'DM Mono',monospace;
   }
-  .task-priority.alta   { background: rgba(255,75,110,.15);  color: var(--red);    border: 1px solid rgba(255,75,110,.3); }
-  .task-priority.media  { background: rgba(255,214,0,.12);   color: var(--yellow); border: 1px solid rgba(255,214,0,.3); }
-  .task-priority.baja   { background: rgba(0,255,136,.1);    color: var(--green);  border: 1px solid rgba(0,255,136,.25); }
+  .task-priority.alta  { background:rgba(224,96,96,.12);  color:var(--red);   border:1px solid rgba(224,96,96,.25); }
+  .task-priority.media { background:rgba(232,160,69,.1);  color:var(--amber); border:1px solid rgba(232,160,69,.25); }
+  .task-priority.baja  { background:rgba(126,201,138,.08);color:var(--green); border:1px solid rgba(126,201,138,.2); }
 
-  /* ── Objects ── */
+  /* task form */
+  #task-form-row {
+    display:flex; gap:10px; margin-bottom:20px;
+  }
+  .task-input {
+    flex:1; background:var(--surface2); border:1px solid var(--border2); color:var(--text);
+    padding:11px 14px; border-radius:9px;
+    font-family:'DM Sans',sans-serif; font-size:.92rem; outline:none;
+    transition:border-color .2s;
+  }
+  .task-input:focus { border-color:var(--amber2); }
+  .task-input::placeholder { color:var(--muted2); }
+  .task-input-person { width:180px; }
+  .task-add-btn {
+    background:var(--amber2); color:var(--bg); border:none;
+    padding:0 20px; border-radius:9px; font-weight:600;
+    font-family:'DM Sans',sans-serif; font-size:.82rem;
+    letter-spacing:.06em; cursor:pointer; transition:background .2s;
+    white-space:nowrap;
+  }
+  .task-add-btn:hover { background:var(--amber); }
+
+  /* ── OBJECTS ── */
   #objects-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-    height: calc(100vh - 200px);
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+    height:calc(100vh - 190px);
   }
   .object-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 24px 20px;
-    display: flex; flex-direction: column; gap: 10px;
-    position: relative; transition: all .3s; overflow: hidden;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:22px 18px;
+    display:flex; flex-direction:column; gap:9px;
+    position:relative; transition:all .3s; overflow:hidden;
   }
   .object-card.active-state {
-    border-color: rgba(124,58,237,.5);
-    background: linear-gradient(135deg, var(--surface), rgba(124,58,237,.05));
-    box-shadow: 0 0 20px rgba(124,58,237,.15);
+    border-color:rgba(184,106,46,.4);
+    background:linear-gradient(135deg, var(--surface), rgba(184,106,46,.04));
+    box-shadow:0 0 18px rgba(184,106,46,.12);
   }
   .object-card.active-cursor {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0,212,255,.3), var(--glow);
-    transform: scale(1.03);
+    border-color:var(--amber);
+    box-shadow:0 0 0 1px rgba(232,160,69,.2), var(--glow);
+    transform:scale(1.03);
   }
-  .obj-icon { font-size: 2.4rem; }
-  .obj-name { font-weight: 600; font-size: .95rem; }
-  .obj-value { font-size: .82rem; color: var(--muted); }
+  .obj-icon { font-size:2.2rem; }
+  .obj-name { font-weight:600; font-size:.9rem; color:var(--cream); }
+  .obj-value { font-size:.78rem; color:var(--muted); }
   .obj-status {
-    margin-top: auto; font-size: .72rem; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase;
-    display: flex; align-items: center; gap: 6px;
+    margin-top:auto; font-size:.7rem; font-weight:600;
+    letter-spacing:.07em; text-transform:uppercase;
+    display:flex; align-items:center; gap:5px;
+    font-family:'DM Mono',monospace;
   }
-  .obj-status .dot { width: 7px; height: 7px; border-radius: 50%; }
-  .obj-status.on .dot  { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .obj-status.off .dot { background: var(--muted); }
+  .obj-status .dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .obj-status.on .dot  { background:var(--green); box-shadow:0 0 5px var(--green); }
+  .obj-status.off .dot { background:var(--muted2); }
+  .obj-status.on  { color:var(--green); }
+  .obj-status.off { color:var(--muted2); }
 
-  /* ── Payments ── */
+  /* ── PAYMENTS ── */
+  #pay-summary { display:flex; gap:12px; margin-bottom:16px; }
+  .pay-sum-card {
+    flex:1; background:var(--surface); border:1px solid var(--border);
+    border-radius:11px; padding:13px 16px;
+  }
+  .pay-sum-label { font-size:.7rem; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; font-weight:500; }
+  .pay-sum-value { font-family:'DM Mono',monospace; font-size:1.25rem; font-weight:500; margin-top:4px; }
+  .pay-sum-card.pending .pay-sum-value { color:var(--red); }
+  .pay-sum-card.paid    .pay-sum-value { color:var(--green); }
+
   #payments-list {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-    height: calc(100vh - 200px); overflow-y: auto; align-content: start;
-    scrollbar-width: none;
+    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    height:calc(100vh - 230px); overflow-y:auto; align-content:start;
+    scrollbar-width:none;
   }
-  #payments-list::-webkit-scrollbar { display: none; }
+  #payments-list::-webkit-scrollbar { display:none; }
   .payment-item {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 18px 20px;
-    display: flex; align-items: center; gap: 14px;
-    transition: all .3s;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:16px 18px;
+    display:flex; align-items:center; gap:12px;
+    transition:all .3s;
   }
-  .payment-item.paid { opacity: .5; }
+  .payment-item.paid { opacity:.45; }
   .payment-item.active-cursor {
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(0,212,255,.2);
-    background: rgba(0,212,255,.03);
+    border-color:var(--amber2);
+    box-shadow:0 0 10px rgba(232,160,69,.15);
+    background:rgba(232,160,69,.02);
   }
   .pay-icon-wrap {
-    width: 48px; height: 48px; border-radius: 12px;
-    background: var(--surface2); display: flex; align-items: center; justify-content: center;
-    font-size: 1.6rem; flex-shrink: 0;
+    width:44px; height:44px; border-radius:10px;
+    background:var(--surface2); display:flex; align-items:center;
+    justify-content:center; font-size:1.5rem; flex-shrink:0;
+    border:1px solid var(--border);
   }
-  .pay-info { flex: 1; }
-  .pay-name { font-weight: 600; font-size: .95rem; }
-  .pay-due  { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+  .pay-info { flex:1; }
+  .pay-name { font-weight:600; font-size:.9rem; color:var(--cream); }
+  .pay-due  { font-size:.72rem; color:var(--muted); margin-top:2px; }
   .pay-category {
-    font-size: .65rem; padding: 2px 7px; border-radius: 4px;
-    border: 1px solid var(--border); color: var(--muted);
-    letter-spacing: .05em; text-transform: uppercase; font-weight: 600;
-    margin-top: 5px; display: inline-block;
+    font-size:.62rem; padding:2px 6px; border-radius:4px;
+    border:1px solid var(--border2); color:var(--muted2);
+    letter-spacing:.05em; text-transform:uppercase; font-weight:600;
+    margin-top:4px; display:inline-block; font-family:'DM Mono',monospace;
   }
-  .pay-amount { font-family: 'Orbitron', monospace; font-size: 1rem; font-weight: 700; text-align: right; }
-  .pay-status { font-size: .7rem; margin-top: 4px; text-align: right; font-weight: 600; }
-  .payment-item.paid .pay-status { color: var(--green); }
-  .payment-item:not(.paid) .pay-status { color: var(--red); }
+  .pay-amount { font-family:'DM Mono',monospace; font-size:.95rem; font-weight:500; text-align:right; color:var(--cream); }
+  .pay-status { font-size:.68rem; margin-top:3px; text-align:right; font-weight:600; letter-spacing:.04em; }
+  .payment-item.paid     .pay-status { color:var(--green); }
+  .payment-item:not(.paid) .pay-status { color:var(--red); }
 
-  /* ── Payments summary ── */
-  #pay-summary {
-    display: flex; gap: 14px; margin-bottom: 18px;
-  }
-  .pay-sum-card {
-    flex: 1; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 18px;
-  }
-  .pay-sum-label { font-size: .72rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-  .pay-sum-value { font-family: 'Orbitron', monospace; font-size: 1.3rem; font-weight: 700; margin-top: 4px; }
-  .pay-sum-card.pending .pay-sum-value { color: var(--red); }
-  .pay-sum-card.paid    .pay-sum-value { color: var(--green); }
-
-  /* ── tooltip / breadcrumb ── */
+  /* ── BREADCRUMB ── */
   #breadcrumb {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: rgba(14,21,32,.9); border: 1px solid var(--border);
-    border-radius: 40px; padding: 10px 24px;
-    display: flex; gap: 20px; align-items: center;
-    font-size: .75rem; color: var(--muted); letter-spacing: .06em;
-    backdrop-filter: blur(10px);
-    z-index: 200;
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:rgba(22,19,16,.92); border:1px solid var(--border2);
+    border-radius:40px; padding:9px 22px;
+    display:flex; gap:18px; align-items:center;
+    font-size:.72rem; color:var(--muted); letter-spacing:.05em;
+    backdrop-filter:blur(12px); z-index:200;
   }
-  #breadcrumb span { display: flex; align-items: center; gap: 6px; }
+  #breadcrumb span { display:flex; align-items:center; gap:5px; }
   #breadcrumb .key {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 5px; padding: 2px 8px; font-family: monospace;
-    color: var(--accent); font-size: .78rem;
+    background:var(--surface3); border:1px solid var(--border2);
+    border-radius:4px; padding:2px 7px; font-family:'DM Mono',monospace;
+    color:var(--amber); font-size:.72rem;
   }
 
-  /* ── connection overlay ── */
+  /* ── OVERLAY ── */
   #conn-overlay {
-    position: fixed; inset: 0; background: rgba(8,12,20,.95);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 1000; gap: 16px; transition: opacity .5s;
+    position:fixed; inset:0; background:rgba(15,13,10,.96);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:1000; gap:14px; transition:opacity .5s;
   }
-  #conn-overlay.hidden { opacity: 0; pointer-events: none; }
+  #conn-overlay.hidden { opacity:0; pointer-events:none; }
   #conn-overlay .spin {
-    width: 48px; height: 48px; border-radius: 50%;
-    border: 3px solid var(--border); border-top-color: var(--accent);
-    animation: spin 1s linear infinite;
+    width:44px; height:44px; border-radius:50%;
+    border:2px solid var(--border2); border-top-color:var(--amber);
+    animation:spin 1s linear infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  #conn-overlay p { color: var(--muted); font-size: .9rem; letter-spacing: .08em; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  #conn-overlay p { color:var(--muted); font-size:.85rem; letter-spacing:.1em; font-family:'Cinzel',serif; }
 
-  /* color avatars per person */
-  .av-Ana    { background: rgba(255,75,110,.2);   color: var(--red);    border: 1px solid rgba(255,75,110,.3); }
-  .av-Carlos { background: rgba(0,212,255,.2);    color: var(--accent); border: 1px solid rgba(0,212,255,.3); }
-  .av-Sofia  { background: rgba(124,58,237,.2);   color: #a78bfa;       border: 1px solid rgba(124,58,237,.3); }
-  .av-Casa   { background: rgba(0,255,136,.15);   color: var(--green);  border: 1px solid rgba(0,255,136,.3); }
+  /* ── avatar colors ── */
+  .av-Ana    { background:rgba(224,96,96,.15);   color:var(--red);    border:1px solid rgba(224,96,96,.25); }
+  .av-Carlos { background:rgba(232,160,69,.15);  color:var(--amber);  border:1px solid rgba(232,160,69,.25); }
+  .av-Sofia  { background:rgba(184,106,46,.2);   color:var(--copper); border:1px solid rgba(184,106,46,.3); }
+  .av-Casa   { background:rgba(126,201,138,.12); color:var(--green);  border:1px solid rgba(126,201,138,.22); }
+  .av-Movil  { background:rgba(240,230,208,.1);  color:var(--cream);  border:1px solid rgba(240,230,208,.2); }
 </style>
 </head>
 <body>
 
-<!-- connection waiting -->
 <div id="conn-overlay">
   <div class="spin"></div>
-  <p>ESPERANDO CONEXIÓN...</p>
+  <p>ESPERANDO CONEXIÓN</p>
 </div>
 
-<!-- header -->
 <div id="header">
-  <div class="logo">⌂ SMART HOME</div>
+  <div class="logo">SMART HOME</div>
   <div class="sep"></div>
   <div class="status-dot" id="dot"></div>
   <div class="conn-label" id="conn-label">SIN CONEXIÓN</div>
@@ -390,105 +413,101 @@
 </div>
 
 <div id="app">
-
-  <!-- ── GRID VIEW ── -->
   <div id="grid-view">
     <div class="section-card" id="card-lights" onclick="enterSection('lights')">
-      <span class="cursor-arrow">▶</span>
+      <span class="cursor-arrow">›</span>
       <div class="card-icon">💡</div>
       <div class="card-title">Luces</div>
-      <div class="card-subtitle">Control de iluminación de la casa</div>
+      <div class="card-subtitle">Iluminación de la casa</div>
       <div class="card-stats" id="lights-stats"></div>
     </div>
     <div class="section-card" id="card-tasks" onclick="enterSection('tasks')">
-      <span class="cursor-arrow">▶</span>
+      <span class="cursor-arrow">›</span>
       <div class="card-icon">✅</div>
       <div class="card-title">Tareas</div>
-      <div class="card-subtitle">Listado de tareas por persona</div>
+      <div class="card-subtitle">Lista por persona</div>
       <div class="card-stats" id="tasks-stats"></div>
     </div>
     <div class="section-card" id="card-objects" onclick="enterSection('objects')">
-      <span class="cursor-arrow">▶</span>
+      <span class="cursor-arrow">›</span>
       <div class="card-icon">🏠</div>
       <div class="card-title">Objetos</div>
       <div class="card-subtitle">Dispositivos y electrodomésticos</div>
       <div class="card-stats" id="objects-stats"></div>
     </div>
     <div class="section-card" id="card-payments" onclick="enterSection('payments')">
-      <span class="cursor-arrow">▶</span>
+      <span class="cursor-arrow">›</span>
       <div class="card-icon">💳</div>
       <div class="card-title">Pagos</div>
-      <div class="card-subtitle">Recibos y suscripciones pendientes</div>
+      <div class="card-subtitle">Recibos y suscripciones</div>
       <div class="card-stats" id="payments-stats"></div>
     </div>
   </div>
 
-  <!-- ── SECTION VIEW ── -->
   <div id="section-view">
-    <!-- Lights -->
-    <div id="view-lights" style="display:none; height:100%;">
+    <div id="view-lights" style="display:none; height:100%">
       <div class="section-header">
         <div class="section-icon">💡</div>
         <h2>LUCES</h2>
-        <div class="back-hint">← ATRÁS</div>
+        <div class="back-hint">← atrás</div>
       </div>
       <div id="lights-grid"></div>
     </div>
 
-    <!-- Tasks -->
-    <div id="view-tasks" style="display:none; height:100%;">
+    <div id="view-tasks" style="display:none; height:100%; flex-direction:column">
       <div class="section-header">
         <div class="section-icon">✅</div>
         <h2>TAREAS</h2>
-        <div class="back-hint">← ATRÁS</div>
+        <div class="back-hint">← atrás</div>
+      </div>
+      <div id="task-form-row">
+        <input class="task-input" id="task-title" type="text" placeholder="Añadir tarea...">
+        <input class="task-input task-input-person" id="task-person" type="text" placeholder="¿Para quién?">
+        <button class="task-add-btn" id="task-add-btn">AÑADIR</button>
       </div>
       <div id="tasks-container"></div>
     </div>
 
-    <!-- Objects -->
-    <div id="view-objects" style="display:none; height:100%;">
+    <div id="view-objects" style="display:none; height:100%">
       <div class="section-header">
         <div class="section-icon">🏠</div>
         <h2>OBJETOS</h2>
-        <div class="back-hint">← ATRÁS</div>
+        <div class="back-hint">← atrás</div>
       </div>
       <div id="objects-grid"></div>
     </div>
 
-    <!-- Payments -->
-    <div id="view-payments" style="display:none; height:100%;">
+    <div id="view-payments" style="display:none; height:100%">
       <div class="section-header">
         <div class="section-icon">💳</div>
         <h2>PAGOS</h2>
-        <div class="back-hint">← ATRÁS</div>
+        <div class="back-hint">← atrás</div>
       </div>
       <div id="pay-summary"></div>
       <div id="payments-list"></div>
     </div>
   </div>
-
 </div>
 
-<!-- breadcrumb hint -->
 <div id="breadcrumb">
-  <span>📱 Mover móvil para <span class="key">NAVEGAR</span></span>
-  <span>Inclinar hacia pantalla para <span class="key">ENTRAR</span></span>
-  <span>Agitar para <span class="key">ACCIÓN</span></span>
+  <span>Mover móvil <span class="key">navegar</span></span>
+  <span>Inclinar <span class="key">entrar</span></span>
+  <span>Agitar <span class="key">acción</span></span>
+  <span style="border-left:1px solid var(--border);padding-left:14px;margin-left:4px">Supr <span class="key">borrar tarea</span></span>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
   const socket = io();
   let state = null;
+  let apiTasks = [];
 
-  // ── clock ──
   setInterval(() => {
     const d = new Date();
     document.getElementById('clock').textContent =
-      d.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }, 1000);
 
-  // ── connection ──
   socket.on('connect', () => {
     document.getElementById('dot').style.background = 'var(--green)';
     document.getElementById('conn-label').textContent = 'CONECTADO';
@@ -498,40 +517,83 @@
     document.getElementById('conn-label').textContent = 'SIN CONEXIÓN';
   });
 
-  socket.on('fullState', s => { state = s; render(s); hideOverlay(); });
-  socket.on('stateUpdate', s => { state = s; render(s); });
+  socket.on('fullState', s => {
+    try {
+      state = s;
+      if (apiTasks.length) s.tasks = apiTasks;
+      render(s);
+      document.getElementById('conn-overlay').classList.add('hidden');
+    } catch(e) { console.error('fullState render error:', e); }
+  });
 
-  function hideOverlay() {
-    document.getElementById('conn-overlay').classList.add('hidden');
+  socket.on('stateUpdate', s => {
+    try {
+      // Solo sobreescribir tasks si apiTasks tiene datos
+      if (apiTasks.length > 0) s.tasks = apiTasks;
+      if (s.tasksCursor >= s.tasks.length && s.tasks.length > 0) {
+        s.tasksCursor = s.tasks.length - 1;
+      }
+      state = s;
+      render(s);
+    } catch(e) { console.error('stateUpdate render error:', e); }
+  });
+
+  // ── API TAREAS ──
+  async function loadApiTasks() {
+    try {
+      const res  = await fetch('/api/tasks');
+      const data = await res.json();
+      apiTasks   = data.map(t => ({
+        id:       t.id,
+        person:   t.assignee || 'Casa',
+        text:     t.title,
+        done:     t.done || false,
+        priority: t.priority || 'media',
+      }));
+      if (state) {
+        state.tasks = apiTasks;
+        if (state.tasksCursor >= state.tasks.length && state.tasks.length > 0)
+          state.tasksCursor = state.tasks.length - 1;
+        if (state.activeSection === 'tasks') renderTasks(state);
+        renderTasksStats(state);
+      }
+    } catch(e) { console.error('loadApiTasks:', e); }
   }
+  loadApiTasks();
+  setInterval(loadApiTasks, 1500);
+
+  // ── FORMULARIO TAREAS ──
+  document.getElementById('task-add-btn').addEventListener('click', async () => {
+    const title  = document.getElementById('task-title').value.trim();
+    const person = document.getElementById('task-person').value.trim() || 'Casa';
+    if (!title) return;
+    await fetch('/api/tasks', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ title, assignee: person }),
+    });
+    document.getElementById('task-title').value  = '';
+    document.getElementById('task-person').value = '';
+    loadApiTasks();
+  });
 
   // ── RENDER ──
   function render(s) {
-    if (!s.activeSection) {
-      showGrid(s);
-    } else {
-      showSection(s);
-    }
+    if (!s.activeSection) showGrid(s);
+    else showSection(s);
   }
 
-  // ── GRID ──
   function showGrid(s) {
-    const gv = document.getElementById('grid-view');
-    const sv = document.getElementById('section-view');
-    gv.classList.remove('hidden');
-    sv.classList.remove('visible');
+    document.getElementById('grid-view').classList.remove('hidden');
+    document.getElementById('section-view').classList.remove('visible');
     ['lights','tasks','objects','payments'].forEach(sec => {
       document.getElementById('view-' + sec).style.display = 'none';
     });
-
-    const sections = ['lights','tasks','objects','payments'];
+    const sections  = ['lights','tasks','objects','payments'];
     const activeIdx = s.cursor.y * 2 + s.cursor.x;
     sections.forEach((sec, i) => {
-      const card = document.getElementById('card-' + sec);
-      card.classList.toggle('active', i === activeIdx);
+      document.getElementById('card-' + sec).classList.toggle('active', i === activeIdx);
     });
-
-    // update stat chips
     renderLightsStats(s);
     renderTasksStats(s);
     renderObjectsStats(s);
@@ -541,46 +603,38 @@
   function renderLightsStats(s) {
     const on = s.lights.filter(l => l.on).length;
     document.getElementById('lights-stats').innerHTML = `
-      <div class="stat-chip"><div class="stat-dot yellow"></div>${on} Encendidas</div>
-      <div class="stat-chip"><div class="stat-dot blue"></div>${s.lights.length - on} Apagadas</div>
-    `;
+      <div class="stat-chip"><div class="stat-dot amber"></div>${on} encendidas</div>
+      <div class="stat-chip"><div class="stat-dot copper"></div>${s.lights.length - on} apagadas</div>`;
   }
   function renderTasksStats(s) {
     const done = s.tasks.filter(t => t.done).length;
     const alta = s.tasks.filter(t => !t.done && t.priority === 'alta').length;
     document.getElementById('tasks-stats').innerHTML = `
-      <div class="stat-chip"><div class="stat-dot green"></div>${done} Hechas</div>
-      <div class="stat-chip"><div class="stat-dot red"></div>${alta} Urgentes</div>
-    `;
+      <div class="stat-chip"><div class="stat-dot green"></div>${done} hechas</div>
+      <div class="stat-chip"><div class="stat-dot red"></div>${alta} urgentes</div>`;
   }
   function renderObjectsStats(s) {
     const active = s.objects.filter(o => o.active).length;
     document.getElementById('objects-stats').innerHTML = `
-      <div class="stat-chip"><div class="stat-dot green"></div>${active} Activos</div>
-      <div class="stat-chip"><div class="stat-dot blue"></div>${s.objects.length} Total</div>
-    `;
+      <div class="stat-chip"><div class="stat-dot green"></div>${active} activos</div>
+      <div class="stat-chip"><div class="stat-dot copper"></div>${s.objects.length} total</div>`;
   }
   function renderPaymentsStats(s) {
     const pending = s.payments.filter(p => !p.paid).length;
     const amount  = s.payments.filter(p => !p.paid).reduce((a,p) => a + p.amount, 0);
     document.getElementById('payments-stats').innerHTML = `
-      <div class="stat-chip"><div class="stat-dot red"></div>${pending} Pendientes</div>
-      <div class="stat-chip"><div class="stat-dot yellow"></div>${amount.toFixed(2)} €</div>
-    `;
+      <div class="stat-chip"><div class="stat-dot red"></div>${pending} pendientes</div>
+      <div class="stat-chip"><div class="stat-dot amber"></div>${amount.toFixed(2)} €</div>`;
   }
 
-  // ── SECTION ──
   function showSection(s) {
-    const gv = document.getElementById('grid-view');
-    const sv = document.getElementById('section-view');
-    gv.classList.add('hidden');
-    sv.classList.add('visible');
-
+    document.getElementById('grid-view').classList.add('hidden');
+    document.getElementById('section-view').classList.add('visible');
     ['lights','tasks','objects','payments'].forEach(sec => {
       document.getElementById('view-' + sec).style.display = 'none';
     });
-    document.getElementById('view-' + s.activeSection).style.display = 'block';
-
+    const v = document.getElementById('view-' + s.activeSection);
+    v.style.display = (s.activeSection === 'tasks') ? 'flex' : 'block';
     switch(s.activeSection) {
       case 'lights':   renderLights(s);   break;
       case 'tasks':    renderTasks(s);    break;
@@ -591,105 +645,102 @@
 
   function enterSection(sec) { socket.emit('enter'); }
 
-  // ── LIGHTS VIEW ──
   function renderLights(s) {
     const g = document.getElementById('lights-grid');
-    g.innerHTML = s.lights.map((l, i) => `
-      <div class="light-card ${l.on ? 'on' : ''} ${i === s.lightsCursor ? 'active-cursor' : ''}">
+    g.innerHTML = s.lights.map((l,i) => `
+      <div class="light-card ${l.on?'on':''} ${i===s.lightsCursor?'active-cursor':''}">
         <div class="light-room">${l.room}</div>
         <div class="light-icon">${l.icon}</div>
         <div class="light-name">${l.name}</div>
         <div class="light-toggle"></div>
-      </div>
-    `).join('');
-    // scroll active into view
+      </div>`).join('');
     const cards = g.querySelectorAll('.light-card');
-    if (cards[s.lightsCursor]) cards[s.lightsCursor].scrollIntoView({block:'nearest', behavior:'smooth'});
+    if (cards[s.lightsCursor]) cards[s.lightsCursor].scrollIntoView({block:'nearest',behavior:'smooth'});
   }
 
-  // ── TASKS VIEW ──
   function renderTasks(s) {
     const container = document.getElementById('tasks-container');
+    if (!s.tasks.length) {
+      container.innerHTML = `<div style="padding:20px;color:var(--muted);text-align:center;width:100%">No hay tareas. Añade una arriba.</div>`;
+      return;
+    }
     const persons = [...new Set(s.tasks.map(t => t.person))];
-    const avatarInitial = p => p.charAt(0);
     container.innerHTML = persons.map(person => {
       const personTasks = s.tasks.filter(t => t.person === person);
-      const doneCount = personTasks.filter(t => t.done).length;
+      const doneCount   = personTasks.filter(t => t.done).length;
+      const avClass     = 'av-' + person.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s.*/,'');
       return `
         <div class="person-column">
           <div class="person-header">
-            <div class="person-avatar av-${person.replace('í','i').replace('ó','o')}">${avatarInitial(person)}</div>
+            <div class="person-avatar ${avClass}">${person.charAt(0)}</div>
             <div class="person-name">${person}</div>
             <div class="person-count">${doneCount}/${personTasks.length}</div>
           </div>
           ${personTasks.map(t => {
-            const globalIdx = s.tasks.indexOf(t);
+            const gi = s.tasks.indexOf(t);
             return `
-              <div class="task-item ${t.done ? 'done' : ''} ${globalIdx === s.tasksCursor ? 'active-cursor' : ''}">
-                <div class="task-check">${t.done ? '✓' : ''}</div>
+              <div class="task-item ${t.done?'done':''} ${gi===s.tasksCursor?'active-cursor':''}">
+                <div class="task-check">${t.done?'✓':''}</div>
                 <div class="task-text">${t.text}</div>
                 <div class="task-priority ${t.priority}">${t.priority}</div>
-              </div>
-            `;
+              </div>`;
           }).join('')}
-        </div>
-      `;
+        </div>`;
     }).join('');
+    const items = container.querySelectorAll('.task-item');
+    if (items[s.tasksCursor]) items[s.tasksCursor].scrollIntoView({block:'nearest',behavior:'smooth',inline:'center'});
   }
 
-  // ── OBJECTS VIEW ──
   function renderObjects(s) {
-    const g = document.getElementById('objects-grid');
-    g.innerHTML = s.objects.map((o, i) => `
-      <div class="object-card ${o.active ? 'active-state' : ''} ${i === s.objectsCursor ? 'active-cursor' : ''}">
+    document.getElementById('objects-grid').innerHTML = s.objects.map((o,i) => `
+      <div class="object-card ${o.active?'active-state':''} ${i===s.objectsCursor?'active-cursor':''}">
         <div class="obj-icon">${o.icon}</div>
         <div class="obj-name">${o.name}</div>
         <div class="obj-value">${o.value}</div>
-        <div class="obj-status ${o.active ? 'on' : 'off'}">
-          <div class="dot"></div>
-          ${o.active ? 'Activo' : 'Inactivo'}
+        <div class="obj-status ${o.active?'on':'off'}">
+          <div class="dot"></div>${o.active?'Activo':'Inactivo'}
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
-  // ── PAYMENTS VIEW ──
   function renderPayments(s) {
     const totalPending = s.payments.filter(p => !p.paid).reduce((a,p) => a + p.amount, 0);
     const totalPaid    = s.payments.filter(p =>  p.paid).reduce((a,p) => a + p.amount, 0);
     document.getElementById('pay-summary').innerHTML = `
       <div class="pay-sum-card pending">
-        <div class="pay-sum-label">Pendiente este mes</div>
+        <div class="pay-sum-label">Pendiente</div>
         <div class="pay-sum-value">${totalPending.toFixed(2)} €</div>
       </div>
       <div class="pay-sum-card paid">
         <div class="pay-sum-label">Pagado</div>
         <div class="pay-sum-value">${totalPaid.toFixed(2)} €</div>
-      </div>
-    `;
-
-    document.getElementById('payments-list').innerHTML = s.payments.map((p, i) => `
-      <div class="payment-item ${p.paid ? 'paid' : ''} ${i === s.paymentsCursor ? 'active-cursor' : ''}">
+      </div>`;
+    document.getElementById('payments-list').innerHTML = s.payments.map((p,i) => `
+      <div class="payment-item ${p.paid?'paid':''} ${i===s.paymentsCursor?'active-cursor':''}">
         <div class="pay-icon-wrap">${p.icon}</div>
         <div class="pay-info">
           <div class="pay-name">${p.name}</div>
-          <div class="pay-due">📅 ${p.due}</div>
+          <div class="pay-due">${p.due}</div>
           <div class="pay-category">${p.category}</div>
         </div>
         <div>
           <div class="pay-amount">${p.amount.toFixed(2)} €</div>
-          <div class="pay-status">${p.paid ? '✓ Pagado' : '● Pendiente'}</div>
+          <div class="pay-status">${p.paid ? 'pagado' : 'pendiente'}</div>
         </div>
-      </div>
-    `).join('');
+      </div>`).join('');
   }
 
-  // ── keyboard fallback ──
-  document.addEventListener('keydown', e => {
-    const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right' };
+  // ── TECLADO ──
+  document.addEventListener('keydown', async e => {
+    if (e.target.tagName === 'INPUT') return;
+    const map = {ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
     if (map[e.key]) socket.emit('navigate', map[e.key]);
     if (e.key === 'Enter' || e.key === ' ') socket.emit(state?.activeSection ? 'action' : 'enter');
     if (e.key === 'Escape' || e.key === 'Backspace') socket.emit('back');
+    if (e.key === 'Delete' && state?.activeSection === 'tasks') {
+      const t = state.tasks[state.tasksCursor];
+      if (t) { await fetch(`/api/tasks/${t.id}`, {method:'DELETE'}); loadApiTasks(); }
+    }
   });
 </script>
 </body>

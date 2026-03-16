@@ -7,35 +7,37 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Smart Home — Mando</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:      #060a10;
-    --surface: #0c1320;
-    --border:  #1a2840;
-    --accent:  #00d4ff;
-    --green:   #00ff88;
-    --red:     #ff4b6e;
-    --yellow:  #ffd600;
-    --text:    #e2e8f0;
-    --muted:   #3a4d63;
+    --bg:      #0f0d0a;
+    --surface: #161310;
+    --border:  #2e2720;
+    --border2: #3d3228;
+    --amber:   #e8a045;
+    --amber2:  #c47a20;
+    --green:   #7ec98a;
+    --red:     #e06060;
+    --text:    #e8dcc8;
+    --muted:   #7a6a55;
+    --cream:   #f0e6d0;
+    --accent:  #e8a045;
+    --yellow:  #e8a045;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { height: 100%; }
   body {
     height: 100%; min-height: 100dvh;
-    background: var(--bg); font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg); font-family: 'DM Sans', sans-serif;
     color: var(--text); overflow: hidden; user-select: none;
     -webkit-tap-highlight-color: transparent;
   }
   body::before {
     content: ''; position: fixed; inset: 0;
-    background-image:
-      radial-gradient(circle at 50% 0%, rgba(0,212,255,.08) 0%, transparent 60%);
+    background-image: radial-gradient(circle at 50% 0%, rgba(232,160,69,.07) 0%, transparent 60%);
     pointer-events: none;
   }
 
-  /* ── wrapper ── */
   #wrapper {
     height: 100dvh; display: flex; flex-direction: column;
     align-items: center; padding: 20px 16px;
@@ -48,9 +50,9 @@
     padding: 0 4px;
   }
   #mob-header .logo {
-    font-family: 'Orbitron', monospace; font-size: .85rem; font-weight: 900;
-    color: var(--accent); letter-spacing: .12em;
-    text-shadow: 0 0 16px rgba(0,212,255,.5);
+    font-family: 'Cinzel', serif; font-size: .82rem; font-weight: 600;
+    color: var(--amber); letter-spacing: .18em;
+    text-shadow: 0 0 18px rgba(232,160,69,.5);
   }
   #conn-status {
     display: flex; align-items: center; gap: 6px;
@@ -60,7 +62,7 @@
     width: 7px; height: 7px; border-radius: 50%;
     background: var(--red); transition: background .3s;
   }
-  #conn-dot.on  { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  #conn-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
 
   /* ── info panel ── */
   #info-panel {
@@ -69,17 +71,13 @@
     display: flex; flex-direction: column; gap: 4px;
   }
   #panel-section {
-    font-family: 'Orbitron', monospace; font-size: .78rem; font-weight: 700;
-    color: var(--accent); letter-spacing: .1em; text-transform: uppercase;
+    font-family: 'DM Mono', monospace; font-size: .72rem; font-weight: 500;
+    color: var(--amber); letter-spacing: .1em; text-transform: uppercase;
   }
-  #panel-item {
-    font-size: .88rem; color: var(--text); font-weight: 500;
-  }
+  #panel-item { font-size: .88rem; color: var(--text); font-weight: 500; }
 
-  /* ── gyro mode toggle ── */
-  #mode-toggle {
-    width: 100%; display: flex; gap: 8px;
-  }
+  /* ── mode toggle ── */
+  #mode-toggle { width: 100%; display: flex; gap: 8px; }
   .mode-btn {
     flex: 1; background: var(--surface); border: 1px solid var(--border);
     border-radius: 10px; padding: 10px; text-align: center;
@@ -87,10 +85,10 @@
     color: var(--muted); cursor: pointer; transition: all .2s;
   }
   .mode-btn.active {
-    background: rgba(0,212,255,.1); border-color: var(--accent); color: var(--accent);
+    background: rgba(232,160,69,.1); border-color: var(--amber); color: var(--amber);
   }
 
-  /* ── GYRO indicator ── */
+  /* ── gyro area ── */
   #gyro-area {
     width: 100%; flex: 1;
     background: var(--surface); border: 1px solid var(--border);
@@ -100,27 +98,22 @@
   #gyro-area.hidden { display: none; }
   #gyro-bubble {
     width: 60px; height: 60px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, rgba(0,212,255,.9), rgba(0,212,255,.4));
-    box-shadow: 0 0 30px rgba(0,212,255,.5);
-    position: absolute;
-    transition: left .1s, top .1s;
+    background: radial-gradient(circle at 35% 35%, rgba(232,160,69,.9), rgba(196,122,32,.5));
+    box-shadow: 0 0 28px rgba(232,160,69,.45);
+    position: absolute; transition: left .1s, top .1s;
   }
   #gyro-center {
     width: 12px; height: 12px; border-radius: 50%;
-    border: 2px solid rgba(0,212,255,.3);
-    position: absolute; left: 50%; top: 50%;
-    transform: translate(-50%,-50%);
+    border: 2px solid rgba(232,160,69,.3);
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
   }
-  #gyro-crosshair {
-    position: absolute; inset: 0; pointer-events: none;
-  }
+  #gyro-crosshair { position: absolute; inset: 0; pointer-events: none; }
   #gyro-crosshair::before,
   #gyro-crosshair::after {
-    content: ''; position: absolute; background: rgba(0,212,255,.08);
+    content: ''; position: absolute; background: rgba(232,160,69,.07);
   }
   #gyro-crosshair::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
   #gyro-crosshair::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
-
   .gyro-label {
     position: absolute; font-size: .65rem; color: var(--muted);
     letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
@@ -129,21 +122,18 @@
   .gyro-label.bottom { bottom: 12px; left: 50%; transform: translateX(-50%); }
   .gyro-label.left   { left: 12px; top: 50%; transform: translateY(-50%); }
   .gyro-label.right  { right: 12px; top: 50%; transform: translateY(-50%); }
-
   #gyro-action-hint {
     position: absolute; bottom: 16px; left: 0; right: 0;
     text-align: center; font-size: .72rem; color: var(--muted); letter-spacing: .05em;
   }
 
-  /* ── BUTTONS area ── */
+  /* ── buttons area ── */
   #buttons-area {
     width: 100%; flex: 1; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 10px;
   }
   #buttons-area.hidden { display: none; }
-
   .btn-row { display: flex; gap: 10px; align-items: center; }
-
   .nav-btn {
     width: 72px; height: 72px; border-radius: 16px;
     background: var(--surface); border: 1px solid var(--border);
@@ -154,14 +144,11 @@
   }
   .nav-btn:active, .nav-btn.pressed {
     background: rgba(0,212,255,.15); border-color: var(--accent);
-    transform: scale(.94);
-    box-shadow: 0 0 20px rgba(0,212,255,.3);
+    transform: scale(.94); box-shadow: 0 0 20px rgba(0,212,255,.3);
   }
 
   /* ── action buttons ── */
-  #action-row {
-    width: 100%; display: flex; gap: 10px; margin-top: 4px;
-  }
+  #action-row { width: 100%; display: flex; gap: 10px; margin-top: 4px; }
   .action-btn {
     flex: 1; height: 56px; border-radius: 14px;
     border: 1px solid var(--border); cursor: pointer;
@@ -170,19 +157,50 @@
     transition: all .15s; -webkit-tap-highlight-color: transparent;
   }
   .action-btn:active { transform: scale(.96); }
-  #btn-enter {
-    background: rgba(0,212,255,.1); border-color: rgba(0,212,255,.4); color: var(--accent);
-  }
-  #btn-enter:active { background: rgba(0,212,255,.25); box-shadow: 0 0 20px rgba(0,212,255,.3); }
-  #btn-action {
-    background: rgba(0,255,136,.1); border-color: rgba(0,255,136,.4); color: var(--green);
-  }
+  #btn-enter  { background: rgba(232,160,69,.1); border-color: rgba(232,160,69,.4); color: var(--amber); }
+  #btn-enter:active  { background: rgba(232,160,69,.22); box-shadow: 0 0 18px rgba(232,160,69,.3); }
+  #btn-action { background: rgba(0,255,136,.1);  border-color: rgba(0,255,136,.4);  color: var(--green);  }
   #btn-action:active { background: rgba(0,255,136,.25); box-shadow: 0 0 20px rgba(0,255,136,.3); }
-  #btn-back {
-    flex: .5; background: rgba(255,75,110,.08); border-color: rgba(255,75,110,.3); color: var(--red);
-    font-size: .7rem;
-  }
+  #btn-back   { flex: .5; background: rgba(255,75,110,.08); border-color: rgba(255,75,110,.3); color: var(--red); font-size: .7rem; }
   #btn-back:active { background: rgba(255,75,110,.2); }
+
+  /* ── voice button ── */
+  #btn-voice {
+    flex: .6; background: rgba(168,85,247,.1); border-color: rgba(168,85,247,.4); color: #a855f7;
+    font-size: .7rem; position: relative; overflow: hidden;
+  }
+  #btn-voice:active { background: rgba(168,85,247,.25); box-shadow: 0 0 20px rgba(168,85,247,.3); }
+  #btn-voice.recording {
+    animation: pulse-voice 1s infinite; background: rgba(168,85,247,.4); color: white;
+  }
+  /* estado de éxito: brilla en verde brevemente */
+  #btn-voice.success {
+    background: rgba(0,255,136,.25); border-color: var(--green); color: var(--green);
+    animation: none;
+  }
+  /* estado de error: brilla en rojo */
+  #btn-voice.error {
+    background: rgba(255,75,110,.2); border-color: var(--red); color: var(--red);
+    animation: none;
+  }
+  @keyframes pulse-voice { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  /* ── toast de confirmación de voz ── */
+  #voice-toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(0,255,136,.15); border: 1px solid rgba(0,255,136,.5);
+    color: var(--green); border-radius: 40px; padding: 10px 22px;
+    font-size: .82rem; font-weight: 600; letter-spacing: .06em;
+    opacity: 0; transition: opacity .3s, transform .3s;
+    pointer-events: none; white-space: nowrap; z-index: 999;
+    max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
+  }
+  #voice-toast.show {
+    opacity: 1; transform: translateX(-50%) translateY(0);
+  }
+  #voice-toast.error-toast {
+    background: rgba(255,75,110,.15); border-color: rgba(255,75,110,.5); color: var(--red);
+  }
 
   /* ── gyro permission ── */
   #gyro-permission {
@@ -193,8 +211,8 @@
   }
   #gyro-permission p { font-size: .82rem; color: var(--muted); text-align: center; padding: 0 24px; }
   #grant-btn {
-    background: rgba(0,212,255,.15); border: 1px solid var(--accent);
-    color: var(--accent); border-radius: 10px; padding: 10px 24px;
+    background: rgba(232,160,69,.12); border: 1px solid var(--amber);
+    color: var(--amber); border-radius: 10px; padding: 10px 24px;
     font-weight: 700; font-size: .82rem; letter-spacing: .08em;
     text-transform: uppercase; cursor: pointer;
   }
@@ -202,18 +220,16 @@
 
   /* ── last command flash ── */
   #last-cmd {
-    font-family: 'Orbitron', monospace; font-size: .72rem;
+    font-family: 'DM Mono', monospace; font-size: .72rem;
     color: var(--muted); letter-spacing: .1em; text-transform: uppercase;
-    height: 18px; text-align: center;
-    transition: color .1s;
+    height: 18px; text-align: center; transition: color .1s;
   }
-  #last-cmd.flash { color: var(--accent); }
+  #last-cmd.flash { color: var(--amber); }
 </style>
 </head>
 <body>
 <div id="wrapper">
 
-  <!-- header -->
   <div id="mob-header">
     <div class="logo">⌂ MANDO</div>
     <div id="conn-status">
@@ -222,19 +238,16 @@
     </div>
   </div>
 
-  <!-- info panel -->
   <div id="info-panel">
     <div id="panel-section">— Inicio</div>
     <div id="panel-item">Selecciona una sección</div>
   </div>
 
-  <!-- mode toggle -->
   <div id="mode-toggle">
-    <div class="mode-btn active" id="mode-gyro" onclick="setMode('gyro')">📐 Giroscopio</div>
-    <div class="mode-btn" id="mode-buttons" onclick="setMode('buttons')">🕹️ Botones</div>
+    <div class="mode-btn active" id="mode-gyro"    onclick="setMode('gyro')">📐 Giroscopio</div>
+    <div class="mode-btn"        id="mode-buttons" onclick="setMode('buttons')">🕹️ Botones</div>
   </div>
 
-  <!-- GYRO AREA -->
   <div id="gyro-area">
     <div id="gyro-permission">
       <p>Para usar el giroscopio, necesitamos permiso de movimiento del dispositivo.</p>
@@ -248,35 +261,36 @@
     <div class="gyro-label right">DER</div>
     <div id="gyro-bubble"></div>
     <div id="gyro-center"></div>
-    <div id="gyro-action-hint">Inclina hacia la pantalla → ENTRAR</div>
+    <div id="gyro-action-hint">Inclina hacia pantalla → ENTRAR</div>
   </div>
 
-  <!-- BUTTONS AREA -->
   <div id="buttons-area" class="hidden">
     <div class="btn-row">
       <div class="nav-btn" id="b-up" onpointerdown="navSend('up')" ontouchstart="navSend('up')">▲</div>
     </div>
     <div class="btn-row">
-      <div class="nav-btn" id="b-left"  onpointerdown="navSend('left')"  ontouchstart="navSend('left')">◀</div>
-      <div class="nav-btn" id="b-center" onpointerdown="sendAction()" ontouchstart="sendAction()" style="font-size:1.2rem">⚡</div>
-      <div class="nav-btn" id="b-right" onpointerdown="navSend('right')" ontouchstart="navSend('right')">▶</div>
+      <div class="nav-btn" id="b-left"   onpointerdown="navSend('left')"  ontouchstart="navSend('left')">◀</div>
+      <div class="nav-btn" id="b-center" onpointerdown="sendAction()"     ontouchstart="sendAction()" style="font-size:1.2rem">·</div>
+      <div class="nav-btn" id="b-right"  onpointerdown="navSend('right')" ontouchstart="navSend('right')">▶</div>
     </div>
     <div class="btn-row">
       <div class="nav-btn" id="b-down" onpointerdown="navSend('down')" ontouchstart="navSend('down')">▼</div>
     </div>
   </div>
 
-  <!-- action buttons (always visible) -->
   <div id="action-row">
-    <div class="action-btn" id="btn-back"   onclick="sendBack()">✕ Atrás</div>
-    <div class="action-btn" id="btn-enter"  onclick="sendEnter()">↩ Entrar</div>
-    <div class="action-btn" id="btn-action" onclick="sendAction()">⚡ Acción</div>
+    <div class="action-btn" id="btn-back"   onclick="sendBack()">Atrás</div>
+    <div class="action-btn" id="btn-enter"  onclick="sendEnter()">Entrar</div>
+    <div class="action-btn" id="btn-action" onclick="sendAction()">Acción</div>
+    <div class="action-btn" id="btn-voice"  onclick="startVoice()">Voz</div>
   </div>
 
-  <!-- last command -->
   <div id="last-cmd">· · ·</div>
 
 </div>
+
+<!-- Toast de confirmación de voz -->
+<div id="voice-toast"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -285,12 +299,78 @@
   let gyroActive = false;
   let lastDir = null;
   let lastDirTime = 0;
-  const THRESHOLD_DEG = 12;   // degrees to trigger
-  const COOLDOWN_MS   = 280;  // ms between nav events
+  const THRESHOLD_DEG = 12;
+  const COOLDOWN_MS   = 280;
   let lastShakeTime = 0;
-  let shakeAccumX = 0;
 
-  // ── Connection ──
+  // ── Audio context (Web Audio API — sin dependencias) ────────────────────────
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  /**
+   * Reproduce un tono sintético.
+   * @param {number} freq        Frecuencia en Hz
+   * @param {number} duration    Duración en segundos
+   * @param {string} type        Tipo de onda: 'sine' | 'square' | 'triangle'
+   * @param {number} gain        Volumen 0-1
+   * @param {number} startDelay  Retardo desde ahora (segundos)
+   */
+  function playTone(freq, duration, type = 'sine', gain = 0.35, startDelay = 0) {
+    try {
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
+      osc.connect(env);
+      env.connect(ctx.destination);
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startDelay);
+
+      env.gain.setValueAtTime(0, ctx.currentTime + startDelay);
+      env.gain.linearRampToValueAtTime(gain, ctx.currentTime + startDelay + 0.01);
+      env.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startDelay + duration);
+
+      osc.start(ctx.currentTime + startDelay);
+      osc.stop(ctx.currentTime + startDelay + duration + 0.05);
+    } catch (e) {
+      console.warn('Audio error:', e);
+    }
+  }
+
+  /**
+   * Sonido de ÉXITO: dos notas ascendentes (do-mi)
+   * Suena a "confirmado / tarea guardada"
+   */
+  function playSuccess() {
+    playTone(523, 0.12, 'sine', 0.35, 0.00);   // Do5
+    playTone(659, 0.18, 'sine', 0.40, 0.13);   // Mi5
+  }
+
+  /**
+   * Sonido de ERROR: nota grave descendente
+   */
+  function playError() {
+    playTone(220, 0.25, 'sine', 0.35, 0.00);   // La3 — grave
+    playTone(180, 0.20, 'sine', 0.30, 0.20);   // La3 más bajo
+  }
+
+  // ── Toast ────────────────────────────────────────────────────────────────────
+  let toastTimer = null;
+
+  function showToast(msg, isError = false) {
+    const el = document.getElementById('voice-toast');
+    el.textContent = msg;
+    el.classList.toggle('error-toast', isError);
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ── Connection ──────────────────────────────────────────────────────────────
   socket.on('connect', () => {
     document.getElementById('conn-dot').classList.add('on');
     document.getElementById('conn-text').textContent = 'Conectado';
@@ -301,31 +381,105 @@
   });
 
   socket.on('stateUpdate', updateInfo);
-  socket.on('fullState', updateInfo);
+  socket.on('fullState',   updateInfo);
+
+  // ── Confirmación del servidor: tarea guardada con éxito ─────────────────────
+  socket.on('taskSaved', ({ text }) => {
+    // 1. Sonido de éxito
+    playSuccess();
+    // 2. Vibración: patrón de "check" (corto-corto-largo)
+    navigator.vibrate && navigator.vibrate([40, 60, 40, 60, 120]);
+    // 3. Toast visual
+    showToast('✓ Tarea guardada: ' + text);
+    // 4. Botón de voz brilla en verde
+    const btn = document.getElementById('btn-voice');
+    btn.classList.remove('recording');
+    btn.classList.add('success');
+    setTimeout(() => btn.classList.remove('success'), 1800);
+    // 5. Flash en last-cmd
+    flash('✓ GUARDADO');
+  });
+
+  // ── Error al guardar ────────────────────────────────────────────────────────
+  socket.on('taskError', () => {
+    playError();
+    navigator.vibrate && navigator.vibrate([200, 100, 200]);
+    showToast('✗ Error al procesar el comando', true);
+    voiceBtn('error');
+    flash('✗ ERROR');
+  });
+
+  socket.on('taskIgnored', () => {
+    navigator.vibrate && navigator.vibrate([60, 80, 60]);
+    showToast('⚠ Comando de voz no disponible aquí', true);
+    voiceBtn(null);
+    flash('⚠ NO DISPONIBLE');
+  });
+
+  socket.on('taskDeleted', ({ text }) => {
+    playSuccess();
+    navigator.vibrate && navigator.vibrate([40, 60, 120]);
+    showToast('🗑 Eliminada: ' + text);
+    voiceBtn('success');
+    flash('🗑 ELIMINADA');
+  });
+
+  socket.on('paymentSaved', ({ name, amount }) => {
+    playSuccess();
+    navigator.vibrate && navigator.vibrate([40, 60, 40, 60, 120]);
+    showToast('✓ Pago añadido: ' + name + ' ' + amount + '€');
+    voiceBtn('success');
+    flash('✓ PAGO AÑADIDO');
+  });
+
+  socket.on('paymentPaid', ({ name }) => {
+    playSuccess();
+    navigator.vibrate && navigator.vibrate([40, 60, 120]);
+    showToast('✓ Pagado: ' + name);
+    voiceBtn('success');
+    flash('✓ PAGADO');
+  });
+
+  socket.on('voiceUnknown', ({ text }) => {
+    navigator.vibrate && navigator.vibrate([60, 80, 60]);
+    showToast('⚠ No entendí: "' + text + '"', true);
+    voiceBtn(null);
+    flash('⚠ NO ENTENDIDO');
+  });
+
+  socket.on('lightToggled', ({ name, on }) => {
+    playSuccess();
+    navigator.vibrate && navigator.vibrate([40, 60, 120]);
+    showToast((on ? '💡 Encendida: ' : '🌑 Apagada: ') + name);
+    voiceBtn('success');
+    flash(on ? '💡 ENCENDIDA' : '🌑 APAGADA');
+  });
+
+  socket.on('objectToggled', ({ name, active }) => {
+    playSuccess();
+    navigator.vibrate && navigator.vibrate([40, 60, 120]);
+    showToast((active ? '✅ Activado: ' : '⏹ Desactivado: ') + name);
+    voiceBtn('success');
+    flash(active ? '✅ ACTIVADO' : '⏹ DESACTIVADO');
+  });
 
   function updateInfo(s) {
     const sectionNames = { lights:'💡 Luces', tasks:'✅ Tareas', objects:'🏠 Objetos', payments:'💳 Pagos', null:'— Inicio' };
     document.getElementById('panel-section').textContent = sectionNames[s.activeSection] || '— Inicio';
 
     if (!s.activeSection) {
-      const sections = ['lights','tasks','objects','payments'];
-      const names    = ['Luces', 'Tareas', 'Objetos', 'Pagos'];
-      const idx = s.cursor.y * 2 + s.cursor.x;
+      const names = ['Luces', 'Tareas', 'Objetos', 'Pagos'];
+      const idx   = s.cursor.y * 2 + s.cursor.x;
       document.getElementById('panel-item').textContent = '▶ ' + names[idx];
     } else {
-      const lists = { lights: s.lights, tasks: s.tasks, objects: s.objects, payments: s.payments };
+      const lists   = { lights: s.lights, tasks: s.tasks, objects: s.objects, payments: s.payments };
       const cursors = { lights: s.lightsCursor, tasks: s.tasksCursor, objects: s.objectsCursor, payments: s.paymentsCursor };
-      const list = lists[s.activeSection];
-      const cur  = cursors[s.activeSection];
-      if (list && list[cur]) {
-        const item = list[cur];
-        const label = item.name || item.text || '—';
-        document.getElementById('panel-item').textContent = '▶ ' + label;
-      }
+      const item    = lists[s.activeSection]?.[cursors[s.activeSection]];
+      if (item) document.getElementById('panel-item').textContent = '▶ ' + (item.name || item.text || '—');
     }
   }
 
-  // ── Mode switch ──
+  // ── Mode switch ──────────────────────────────────────────────────────────────
   function setMode(m) {
     mode = m;
     document.getElementById('mode-gyro').classList.toggle('active', m === 'gyro');
@@ -334,14 +488,12 @@
     document.getElementById('buttons-area').classList.toggle('hidden', m === 'gyro');
   }
 
-  // ── Gyro ──
+  // ── Gyro ─────────────────────────────────────────────────────────────────────
   function requestGyro() {
     if (typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
       DeviceOrientationEvent.requestPermission()
-        .then(perm => {
-          if (perm === 'granted') startGyro();
-        })
+        .then(perm => { if (perm === 'granted') startGyro(); })
         .catch(console.error);
     } else {
       startGyro();
@@ -352,15 +504,11 @@
     document.getElementById('gyro-permission').classList.add('hidden');
     gyroActive = true;
     window.addEventListener('deviceorientation', handleOrientation, true);
-    window.addEventListener('devicemotion', handleMotion, true);
+    window.addEventListener('devicemotion',      handleMotion,      true);
   }
 
-  // try auto-start on non-iOS
   if (typeof DeviceOrientationEvent !== 'undefined') {
-    if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
-      // Android / non-Safari: start directly
-      startGyro();
-    }
+    if (typeof DeviceOrientationEvent.requestPermission !== 'function') startGyro();
   }
 
   let baseGamma = null, baseBeta = null;
@@ -368,16 +516,14 @@
   setTimeout(() => { calibrating = false; }, 1500);
 
   function handleOrientation(e) {
-    // gamma = left/right tilt, beta = front/back tilt
-    const gamma = e.gamma || 0;   // -90 to 90
-    const beta  = e.beta  || 0;   // -180 to 180
+    const gamma = e.gamma || 0;
+    const beta  = e.beta  || 0;
 
     if (calibrating) { baseGamma = gamma; baseBeta = beta; return; }
 
     const dGamma = gamma - (baseGamma || 0);
     const dBeta  = beta  - (baseBeta  || 0);
 
-    // move bubble
     const area = document.getElementById('gyro-area');
     const w = area.clientWidth, h = area.clientHeight;
     const bx = Math.max(30, Math.min(w - 30, w/2 + (dGamma / 30) * w/2));
@@ -386,7 +532,6 @@
     bubble.style.left = (bx - 30) + 'px';
     bubble.style.top  = (by - 30) + 'px';
 
-    // detect direction
     const now = Date.now();
     if (now - lastDirTime < COOLDOWN_MS) return;
 
@@ -399,34 +544,29 @@
       else if (dBeta  < -THRESHOLD_DEG) dir = 'up';
     }
 
-    // "push toward screen" = forward tilt, gamma near 0 and beta decreasing sharply
-    // We use a separate gesture: phone tilted face-down (beta < -60) = ENTER
     if (beta < -60 && now - lastDirTime > 800) {
       sendEnter(); lastDirTime = now; return;
     }
 
     if (dir && dir !== lastDir) {
-      lastDir = dir;
-      navSend(dir);
-      lastDirTime = now;
+      lastDir = dir; navSend(dir); lastDirTime = now;
     } else if (!dir) {
       lastDir = null;
     }
   }
 
-  // Shake to action
   function handleMotion(e) {
     const acc = e.accelerationIncludingGravity;
     if (!acc) return;
     const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
-    const now = Date.now();
+    const now   = Date.now();
     if (total > 30 && now - lastShakeTime > 600) {
       lastShakeTime = now;
       sendAction();
     }
   }
 
-  // ── Send events ──
+  // ── Send events ──────────────────────────────────────────────────────────────
   function navSend(dir) {
     socket.emit('navigate', dir);
     flash('↑↓←→ ' + dir.toUpperCase());
@@ -460,6 +600,59 @@
     if (!btn) return;
     btn.classList.add('pressed');
     setTimeout(() => btn.classList.remove('pressed'), 200);
+  }
+
+  // ── Voice Task ───────────────────────────────────────────────────────────────
+  // Helper: aplica estado visual al botón de voz y lo limpia tras 1.8s
+  function voiceBtn(state) {
+    const btn = document.getElementById('btn-voice');
+    btn.classList.remove('recording', 'success', 'error');
+    if (state) {
+      btn.classList.add(state);
+      setTimeout(() => btn.classList.remove(state), 1800);
+    }
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.continuous = false;
+
+    window.startVoice = function() {
+      // Despierta el AudioContext (requiere gesto del usuario)
+      getAudioCtx().resume();
+      recognition.start();
+      document.getElementById('btn-voice').classList.remove('success', 'error');
+      document.getElementById('btn-voice').classList.add('recording');
+      flash('🎤 ESCUCHANDO...');
+      navigator.vibrate && navigator.vibrate(50);
+    };
+
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      socket.emit('voiceTask', text);
+      flash('🎤 ' + text.slice(0, 22).toUpperCase());
+    };
+
+    recognition.onend = () => {
+      // El botón solo sale de 'recording' cuando llega taskSaved/taskError
+      // pero si onend se dispara sin resultado, limpiamos igual
+      const btn = document.getElementById('btn-voice');
+      if (btn.classList.contains('recording')) btn.classList.remove('recording');
+    };
+
+    recognition.onerror = (event) => {
+      document.getElementById('btn-voice').classList.remove('recording');
+      playError();
+      navigator.vibrate && navigator.vibrate([200, 100, 200]);
+      flash('✗ ERROR DE VOZ');
+      console.error(event.error);
+    };
+
+  } else {
+    document.getElementById('btn-voice').style.display = 'none';
   }
 </script>
 </body>

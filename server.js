@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs').promises;
 
 const app = express();
 const server = http.createServer(app);
@@ -9,13 +10,14 @@ const io = new Server(server, {
   cors: { origin: '*' }
 });
 
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 
 const state = {
-  cursor: { x: 1, y: 0 },   // grid position on screen (0-based)
-  activeSection: null,        // null = grid view, string = inside a section
+  cursor: { x: 1, y: 0 },
+  activeSection: null,
 
   lights: [
     { id: 1, name: 'Salón',       icon: '💡', room: 'Salón',   on: true  },
@@ -71,23 +73,77 @@ const state = {
   paymentsCursor: 0,
 };
 
-// ── GRID CONFIG ──────────────────────────────────────────────────────────────
-// sections layout:
-//  [0,0]=Luces  [1,0]=Tareas
-//  [0,1]=Objetos [1,1]=Pagos
+// ── LÓGICA DE TAREAS (API REST) ───────────────────────────────────────────────
+
+const DATA_FILE = path.join(__dirname, 'data', 'tasks.json');
+
+async function readTasks() {
+  try {
+    const data = await fs.readFile(DATA_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    return [];
+  }
+}
+
+async function writeTasks(tasks) {
+  await fs.writeFile(DATA_FILE, JSON.stringify(tasks, null, 2));
+}
+
+app.get('/api/tasks', async (req, res) => {
+  const tasks = await readTasks();
+  res.json(tasks);
+});
+
+app.post('/api/tasks', async (req, res) => {
+  const newTask = req.body;
+  if (!newTask.title) {
+    return res.status(400).json({ error: 'El título de la tarea es obligatorio' });
+  }
+  let tasks = await readTasks();
+  newTask.id = Date.now().toString();
+  newTask.assignee = newTask.assignee || 'Casa';
+  tasks.push(newTask);
+  await writeTasks(tasks);
+  res.status(201).json(newTask);
+});
+
+app.put('/api/tasks/:id', async (req, res) => {
+  const taskId = req.params.id;
+  const updatedTask = req.body;
+  let tasks = await readTasks();
+  const index = tasks.findIndex(task => task.id === taskId);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Tarea no encontrada' });
+  }
+  tasks[index] = { ...tasks[index], ...updatedTask };
+  await writeTasks(tasks);
+  res.json(tasks[index]);
+});
+
+app.delete('/api/tasks/:id', async (req, res) => {
+  const taskId = req.params.id;
+  let tasks = await readTasks();
+  const index = tasks.findIndex(task => task.id === taskId);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Tarea no encontrada' });
+  }
+  const removedTask = tasks.splice(index, 1)[0];
+  await writeTasks(tasks);
+  res.json(removedTask);
+});
+
+// ── GRID CONFIG ───────────────────────────────────────────────────────────────
 const GRID_W = 2, GRID_H = 2;
 
-// ── SOCKET LOGIC ─────────────────────────────────────────────────────────────
+// ── SOCKET LOGIC ──────────────────────────────────────────────────────────────
 io.on('connection', socket => {
   console.log(`[+] ${socket.id} connected`);
 
-  // send full state to whoever just connected
   socket.emit('fullState', state);
 
-  // mobile → server → screen
   socket.on('navigate', dir => {
     if (state.activeSection === null) {
-      // move cursor on grid
       let { x, y } = state.cursor;
       if (dir === 'left')  x = Math.max(0, x - 1);
       if (dir === 'right') x = Math.min(GRID_W - 1, x + 1);
@@ -95,11 +151,10 @@ io.on('connection', socket => {
       if (dir === 'down')  y = Math.min(GRID_H - 1, y + 1);
       state.cursor = { x, y };
     } else {
-      // navigate inside section list
-      const key = state.activeSection + 'Cursor';
+      const key     = state.activeSection + 'Cursor';
       const listKey = state.activeSection;
-      const len = state[listKey].length;
-      let cur = state[key];
+      const len     = state[listKey].length;
+      let cur       = state[key];
       if (dir === 'up')    cur = Math.max(0, cur - 1);
       if (dir === 'down')  cur = Math.min(len - 1, cur + 1);
       if (dir === 'left')  cur = Math.max(0, cur - 1);
@@ -109,9 +164,102 @@ io.on('connection', socket => {
     io.emit('stateUpdate', state);
   });
 
+  // ── VOZ: lógica por sección activa ─────────────────────────────────────────
+  socket.on('voiceTask', async (text) => {
+    if (!text || text.trim() === '') return;
+    const t = text.trim().toLowerCase();
+    const TOGGLE_OFF = /apag|desactiv|apaga|desactiva|apagar|desactivar/;
+    const TOGGLE_ON  = /encend|activ|enciende|activa|encender|activar/;
+
+    // ── SECCIÓN: TAREAS ──────────────────────────────────────────────────────
+    if (state.activeSection === 'tasks') {
+      if (/^(eliminar|borrar|quitar|borra|elimina)/.test(t)) {
+        try {
+          let tasks = await readTasks();
+          if (tasks.length === 0) { socket.emit('taskError'); return; }
+          const idx = Math.min(state.tasksCursor, tasks.length - 1);
+          const removed = tasks.splice(idx, 1)[0];
+          await writeTasks(tasks);
+          state.tasksCursor = Math.max(0, idx - 1);
+          io.emit('stateUpdate', state);
+          socket.emit('taskDeleted', { text: removed.title });
+          console.log('🗑️ Tarea eliminada por voz:', removed.title);
+        } catch (err) { socket.emit('taskError'); }
+        return;
+      }
+      const newTask = { id: Date.now().toString(), title: text, assignee: 'Móvil' };
+      try {
+        let tasks = await readTasks();
+        tasks.push(newTask);
+        await writeTasks(tasks);
+        io.emit('taskAdded', { text });
+        socket.emit('taskSaved', { text });
+        console.log('🎤 Tarea guardada:', text);
+      } catch (err) { socket.emit('taskError'); }
+      return;
+    }
+
+    // ── SECCIÓN: PAGOS ───────────────────────────────────────────────────────
+    if (state.activeSection === 'payments') {
+      if (/^(pagado|pagar|marcar|ya pagu|cobrado)/.test(t)) {
+        const p = state.payments[state.paymentsCursor];
+        if (!p) { socket.emit('taskError'); return; }
+        p.paid = true;
+        io.emit('stateUpdate', state);
+        socket.emit('paymentPaid', { name: p.name });
+        console.log('💳 Pago marcado como pagado:', p.name);
+        return;
+      }
+      // "netflix 20 euros" / "gym 30€" → añadir pago
+      const match = t.match(/^(.+?)\s+([\d]+(?:[.,]\d+)?)\s*(?:euros?|€)?$/);
+      if (match) {
+        const rawName = match[1].trim();
+        const name    = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+        const amount  = parseFloat(match[2].replace(',', '.'));
+        const newPayment = { id: Date.now(), name, icon: '💳', amount, due: 'Sin fecha', category: 'otros', paid: false };
+        state.payments.push(newPayment);
+        io.emit('stateUpdate', state);
+        socket.emit('paymentSaved', { name, amount });
+        console.log('💳 Pago añadido por voz:', name, amount);
+        return;
+      }
+      socket.emit('voiceUnknown', { text });
+      return;
+    }
+
+    // ── SECCIÓN: LUCES ───────────────────────────────────────────────────────
+    if (state.activeSection === 'lights') {
+      const l = state.lights[state.lightsCursor];
+      if (!l) { socket.emit('taskError'); return; }
+      if (TOGGLE_OFF.test(t)) { l.on = false; }
+      else if (TOGGLE_ON.test(t)) { l.on = true; }
+      else { socket.emit('voiceUnknown', { text }); return; }
+      io.emit('stateUpdate', state);
+      socket.emit('lightToggled', { name: l.name, on: l.on });
+      console.log('💡 Luz', l.name, l.on ? 'encendida' : 'apagada', 'por voz');
+      return;
+    }
+
+    // ── SECCIÓN: OBJETOS ─────────────────────────────────────────────────────
+    if (state.activeSection === 'objects') {
+      const o = state.objects[state.objectsCursor];
+      if (!o) { socket.emit('taskError'); return; }
+      if (TOGGLE_OFF.test(t)) { o.active = false; }
+      else if (TOGGLE_ON.test(t)) { o.active = true; }
+      else { socket.emit('voiceUnknown', { text }); return; }
+      io.emit('stateUpdate', state);
+      socket.emit('objectToggled', { name: o.name, active: o.active });
+      console.log('🏠 Objeto', o.name, o.active ? 'activado' : 'desactivado', 'por voz');
+      return;
+    }
+
+    // ── Cualquier otra sección ───────────────────────────────────────────────
+    socket.emit('taskIgnored', { text });
+  });
+
   socket.on('enter', () => {
     if (state.activeSection === null) {
-      const sections = ['lights','tasks','objects','payments'];
+      const sections = ['lights', 'tasks', 'objects', 'payments'];
       const idx = state.cursor.y * GRID_W + state.cursor.x;
       state.activeSection = sections[idx];
     }
@@ -124,7 +272,6 @@ io.on('connection', socket => {
   });
 
   socket.on('action', () => {
-    // toggle/complete current item
     if (state.activeSection === 'lights') {
       const l = state.lights[state.lightsCursor];
       if (l) l.on = !l.on;

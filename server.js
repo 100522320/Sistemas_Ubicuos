@@ -201,7 +201,11 @@ io.on('connection', socket => {
         } else {
           // Lógica para Luces, Objetos y Pagos (Pagos tiene 1 columna, Luces tiene 4)
           let numCols = 1; 
-          if (listKey === 'lights' || listKey === 'objects') numCols = 4; 
+          if (listKey === 'lights' || listKey === 'objects') {
+            numCols = 4; 
+          } else if (listKey === 'payments') {
+            numCols = 2;
+          }
 
           let r = Math.floor(cur / numCols);
           let c = cur % numCols;

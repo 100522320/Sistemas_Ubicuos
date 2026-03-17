@@ -225,6 +225,30 @@
     height: 18px; text-align: center; transition: color .1s;
   }
   #last-cmd.flash { color: var(--amber); }
+
+  /* ── gyro reset button ── */
+  #gyro-reset {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(232,160,69,.12);
+    border: 1px solid rgba(232,160,69,.3);
+    color: var(--amber);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    z-index: 5;
+    transition: all .2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #gyro-reset:active {
+    background: rgba(232,160,69,.3);
+    transform: scale(0.95);
+  }
 </style>
 </head>
 <body>
@@ -249,6 +273,7 @@
   </div>
 
   <div id="gyro-area">
+    <div id="gyro-reset" onclick="resetGyro()">⟲ Centrar</div>
     <div id="gyro-permission">
       <p>Para usar el giroscopio, necesitamos permiso de movimiento del dispositivo.</p>
       <button id="grant-btn" onclick="requestGyro()">Activar Giroscopio</button>
@@ -517,6 +542,18 @@
   let baseGamma = null, baseBeta = null;
   let calibrating = true;
   setTimeout(() => { calibrating = false; }, 1500);
+
+  window.resetGyro = function() {
+    calibrating = true;
+    flash('🔄 CALIBRANDO...');
+    if (navigator.vibrate) navigator.vibrate(30);
+    
+    // Dejamos 800ms para que capture bien la nueva posición
+    setTimeout(() => { 
+      calibrating = false; 
+      flash('✅ CENTRADO');
+    }, 800);
+  };
 
   function handleOrientation(e) {
     const gamma = e.gamma || 0;

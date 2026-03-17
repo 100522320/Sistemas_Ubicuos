@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fsSync = require('fs');
 const fs = require('fs').promises;
 
 const app = express();
@@ -13,64 +14,63 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── STATE ────────────────────────────────────────────────────────────────────
+// ── BASES DE DATOS INDEPENDIENTES POR ZONA ──
 
-const state = {
-  cursor: { x: 1, y: 0 },
-  activeSection: null,
+const DATA_DIR = path.join(__dirname, 'data');
+if (!fsSync.existsSync(DATA_DIR)) fsSync.mkdirSync(DATA_DIR);
 
+const FILES = {
+  lights: path.join(DATA_DIR, 'lights.json'),
+  objects: path.join(DATA_DIR, 'objects.json'),
+  payments: path.join(DATA_DIR, 'payments.json'),
+  tasks: path.join(DATA_DIR, 'tasks.json')
+};
+
+// Datos predeterminados si los archivos no existen la primera vez
+const defaultData = {
   lights: [
-    { id: 1, name: 'Salón',       icon: '💡', room: 'Salón',   on: true  },
-    { id: 2, name: 'Cocina',      icon: '🔆', room: 'Cocina',  on: false },
-    { id: 3, name: 'Dormitorio',  icon: '🌙', room: 'Dormi',   on: true  },
-    { id: 4, name: 'Baño',        icon: '🚿', room: 'Baño',    on: false },
-    { id: 5, name: 'Garaje',      icon: '🚗', room: 'Garaje',  on: false },
-    { id: 6, name: 'Jardín',      icon: '🌿', room: 'Jardín',  on: true  },
-    { id: 7, name: 'Estudio',     icon: '📚', room: 'Estudio', on: false },
-    { id: 8, name: 'Terraza',     icon: '🌅', room: 'Terraza', on: false },
+    { name: "Techo", room: "Salón", icon: "💡", on: false },
+    { name: "Lectura", room: "Salón", icon: "📖", on: false },
+    { name: "Principal", room: "Cocina", icon: "🍳", on: true },
+    { name: "Pasillo", room: "Pasillo", icon: "🚪", on: false }
   ],
-
-  tasks: [
-    { id: 1, person: 'Ana',    text: 'Comprar leche y pan',      done: false, priority: 'alta'  },
-    { id: 2, person: 'Ana',    text: 'Llamar al médico',         done: true,  priority: 'alta'  },
-    { id: 3, person: 'Ana',    text: 'Pagar el seguro',          done: false, priority: 'media' },
-    { id: 4, person: 'Carlos', text: 'Revisar el coche',         done: false, priority: 'media' },
-    { id: 5, person: 'Carlos', text: 'Recoger a los niños',      done: false, priority: 'alta'  },
-    { id: 6, person: 'Carlos', text: 'Arreglar la persiana',     done: true,  priority: 'baja'  },
-    { id: 7, person: 'Sofía',  text: 'Estudiar matemáticas',     done: false, priority: 'alta'  },
-    { id: 8, person: 'Sofía',  text: 'Ordenar habitación',       done: true,  priority: 'baja'  },
-    { id: 9, person: 'Sofía',  text: 'Entregar trabajo escolar', done: false, priority: 'alta'  },
-    { id:10, person: 'Casa',   text: 'Sacar la basura',          done: false, priority: 'alta'  },
-    { id:11, person: 'Casa',   text: 'Limpiar cocina',           done: false, priority: 'media' },
-    { id:12, person: 'Casa',   text: 'Pasar la aspiradora',      done: true,  priority: 'baja'  },
-  ],
-
   objects: [
-    { id: 1, name: 'Termostato',    icon: '🌡️',  value: '21°C',  type: 'climate',  active: true  },
-    { id: 2, name: 'Alarma',        icon: '🔔',  value: 'Activa', type: 'security', active: true  },
-    { id: 3, name: 'TV Salón',      icon: '📺',  value: 'Apagada',type: 'media',    active: false },
-    { id: 4, name: 'Música',        icon: '🎵',  value: 'Spotify',type: 'media',    active: true  },
-    { id: 5, name: 'Lavadora',      icon: '🫧',  value: '34 min', type: 'appliance',active: true  },
-    { id: 6, name: 'Lavavajillas',  icon: '🍽️',  value: 'Listo',  type: 'appliance',active: false },
-    { id: 7, name: 'Calefacción',   icon: '🔥',  value: 'Auto',   type: 'climate',  active: true  },
-    { id: 8, name: 'Puerta',        icon: '🚪',  value: 'Cerrada',type: 'security', active: false },
+    { name: "Termostato", icon: "🌡️", value: "22°C", active: true },
+    { name: "Persianas", icon: "🪟", value: "Abiertas", active: false }
   ],
-
   payments: [
-    { id: 1, name: 'Netflix',      icon: '🎬', amount: 17.99,  due: '15 Mar', category: 'ocio',     paid: false },
-    { id: 2, name: 'Luz',          icon: '⚡', amount: 84.50,  due: '20 Mar', category: 'hogar',    paid: false },
-    { id: 3, name: 'Internet',     icon: '📡', amount: 49.99,  due: '01 Mar', category: 'hogar',    paid: true  },
-    { id: 4, name: 'Spotify',      icon: '🎵', amount: 9.99,   due: '22 Mar', category: 'ocio',     paid: false },
-    { id: 5, name: 'Hipoteca',     icon: '🏠', amount: 850.00, due: '05 Mar', category: 'vivienda', paid: true  },
-    { id: 6, name: 'Seguro coche', icon: '🚗', amount: 63.00,  due: '28 Mar', category: 'seguro',   paid: false },
-    { id: 7, name: 'Agua',         icon: '💧', amount: 32.10,  due: '18 Mar', category: 'hogar',    paid: false },
-    { id: 8, name: 'Gym',          icon: '💪', amount: 29.99,  due: '01 Apr', category: 'salud',    paid: false },
+    { id: 1, name: "Alquiler", icon: "🏠", amount: 850, due: "Día 1", category: "vivienda", paid: false }
   ],
+  tasks: []
+};
 
-  lightsCursor: 0,
-  tasksCursor:  0,
-  objectsCursor: 0,
-  paymentsCursor: 0,
+// Función para cargar un JSON o crearlo si no existe
+function loadJSON(key) {
+  if (fsSync.existsSync(FILES[key])) {
+    try { return JSON.parse(fsSync.readFileSync(FILES[key], 'utf8')); } catch(e) {}
+  }
+  fsSync.writeFileSync(FILES[key], JSON.stringify(defaultData[key], null, 2), 'utf8');
+  return defaultData[key];
+}
+
+// Funciones para guardar CADA zona en su propio archivo al instante
+function saveLights()   { fsSync.writeFileSync(FILES.lights, JSON.stringify(state.lights, null, 2), 'utf8'); }
+function saveObjects()  { fsSync.writeFileSync(FILES.objects, JSON.stringify(state.objects, null, 2), 'utf8'); }
+function savePayments() { fsSync.writeFileSync(FILES.payments, JSON.stringify(state.payments, null, 2), 'utf8'); }
+
+// Para tareas mantenemos las que ya tienes asíncronas
+async function writeTasks(tasks) { fsSync.writeFileSync(FILES.tasks, JSON.stringify(tasks, null, 2), 'utf8'); }
+async function readTasks() { return loadJSON('tasks'); }
+
+// Inicializamos el estado general de la casa
+let state = {
+  activeSection: null,
+  cursor: { x: 0, y: 0 },
+  lightsCursor: 0, tasksCursor: 0, objectsCursor: 0, paymentsCursor: 0,
+  lights: loadJSON('lights'),
+  objects: loadJSON('objects'),
+  payments: loadJSON('payments'),
+  tasks: loadJSON('tasks')
 };
 
 // ── LÓGICA DE TAREAS (API REST) ───────────────────────────────────────────────
@@ -142,75 +142,66 @@ io.on('connection', socket => {
 
   socket.emit('fullState', state);
 
-  // ¡Fíjate en el async!
   socket.on('navigate', async dir => {
     if (state.activeSection === null) {
-      // Navegación en la pantalla principal (Menú 2x2)
       let { x, y } = state.cursor;
       if (dir === 'left')  x = Math.max(0, x - 1);
-      if (dir === 'right') x = Math.min(GRID_W - 1, x + 1);
+      if (dir === 'right') x = Math.min(1, x + 1);
       if (dir === 'up')    y = Math.max(0, y - 1);
-      if (dir === 'down')  y = Math.min(GRID_H - 1, y + 1);
+      if (dir === 'down')  y = Math.min(1, y + 1);
       state.cursor = { x, y };
     } else {
       const key     = state.activeSection + 'Cursor';
       const listKey = state.activeSection;
 
-      // ¡NUEVO!: Si estamos en tareas, sincronizamos con tasks.json antes de movernos
+      // Sincronizamos las tareas reales antes de movernos
       if (listKey === 'tasks') {
          try {
            const dbTasks = await readTasks();
            state.tasks = dbTasks.map(t => ({
-             id: t.id,
-             person: t.assignee || 'Casa',
-             text: t.title,
-             done: t.done || false,
-             priority: t.priority || 'media'
+             id: t.id, person: t.assignee || 'Casa', title: t.title, done: t.done || false
            }));
-         } catch(e) { console.error('Error leyendo tareas para navegar:', e); }
+         } catch(e) {}
       }
 
-      const list    = state[listKey];
-      const len     = list.length;
-      let cur       = state[key];
+      const list = state[listKey];
+      const len  = list.length;
+      let cur    = state[key];
 
       if (len > 0) {
-        // Por si alguna lista se ha acortado desde otra pantalla
         if (cur >= len) cur = len - 1;
 
         if (listKey === 'tasks') {
-          // Navegación 2D para Tareas (agrupado dinámicamente)
-          const persons = [...new Set(list.map(t => t.person))];
+          // LÓGICA DE COLUMNAS PARA TAREAS
+          const persons = [...new Set(list.map(t => t.person || t.assignee || 'Casa'))];
           const cols = persons.map(p => {
             let indices = [];
-            list.forEach((t, i) => {
-              if (t.person === p) indices.push(i);
+            list.forEach((t, originalIndex) => {
+              if ((t.person || t.assignee || 'Casa') === p) indices.push(originalIndex);
             });
             return indices;
           });
 
-          // Buscar en qué fila (r) y columna (c) estamos ahora
+          // Buscar fila y columna actual
           let c = 0, r = 0;
           for (let i = 0; i < cols.length; i++) {
             const rIdx = cols[i].indexOf(cur);
             if (rIdx !== -1) { c = i; r = rIdx; break; }
           }
 
-          // Aplicar la dirección
+          // Aplicar movimiento 2D
           if (dir === 'left')  c = Math.max(0, c - 1);
           if (dir === 'right') c = Math.min(cols.length - 1, c + 1);
           if (dir === 'up')    r = Math.max(0, r - 1);
           if (dir === 'down')  r = Math.min(cols[c].length - 1, r + 1);
 
-          // Si cambiamos de columna, evitar salirnos si la nueva columna es más corta
           r = Math.min(r, cols[c].length - 1);
           cur = cols[c][r];
 
         } else {
-          // Navegación 2D genérica según el layout de pantalla
-          let numCols = 1;
-          if (listKey === 'lights' || listKey === 'objects') numCols = 4;
-          if (listKey === 'payments') numCols = 2;
+          // Lógica para Luces, Objetos y Pagos (Pagos tiene 1 columna, Luces tiene 4)
+          let numCols = 1; 
+          if (listKey === 'lights' || listKey === 'objects') numCols = 4; 
 
           let r = Math.floor(cur / numCols);
           let c = cur % numCols;
@@ -222,9 +213,7 @@ io.on('connection', socket => {
           if (dir === 'down')  r = Math.min(numRows - 1, r + 1);
 
           let nextIdx = r * numCols + c;
-          if (nextIdx >= len) {
-            nextIdx = len - 1; 
-          }
+          if (nextIdx >= len) nextIdx = len - 1; 
           cur = nextIdx;
         }
       }
@@ -237,114 +226,439 @@ io.on('connection', socket => {
   socket.on('voiceTask', async (text) => {
     if (!text || text.trim() === '') return;
     const t = text.trim().toLowerCase();
-    const TOGGLE_OFF = /apag|desactiv|apaga|desactiva|apagar|desactivar/;
+    
+    // Función auxiliar para quitar tildes y comparar fácilmente (Ej: "Salón" -> "salon")
+    const norm = str => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const tNorm = norm(t);
+
+    const TOGGLE_OFF = /apag|a pagar|desactiv|apaga|desactiva|apagar|desactivar/;
     const TOGGLE_ON  = /encend|activ|enciende|activa|encender|activar/;
 
     // ── SECCIÓN: TAREAS ──────────────────────────────────────────────────────
     if (state.activeSection === 'tasks') {
-      if (/^(eliminar|borrar|quitar|borra|elimina)/.test(t)) {
+      const words = text.trim().split(/\s+/);
+      const actionWord = norm(words[0]); // Cogemos la 1ª palabra y le quitamos tildes (ej: "Añadir" -> "anadir")
+
+      // 1. Lógica para Eliminar
+      if (/^(eliminar|borrar|quitar|borra|elimina)$/.test(actionWord)) {
         try {
           let tasks = await readTasks();
           if (tasks.length === 0) { socket.emit('taskError'); return; }
+
+          // Si el usuario dijo más de una palabra (ej: "Borrar comprar pan")
+          if (words.length > 1) {
+            const targetText = norm(words.slice(1).join(' '));
+
+            // Buscamos si el texto encaja con la persona o la tarea
+            const exactIdx = tasks.findIndex(task =>
+              norm(task.assignee + ' ' + task.title).includes(targetText) ||
+              norm(task.title).includes(targetText)
+            );
+
+            if (exactIdx !== -1) {
+              const removed = tasks.splice(exactIdx, 1)[0];
+              await writeTasks(tasks);
+              state.tasks = tasks.map(t => ({
+                id: t.id, person: t.assignee || 'Casa', title: t.title, done: t.done || false
+              }));
+              state.tasksCursor = Math.max(0, Math.min(state.tasksCursor, tasks.length - 1));
+              io.emit('stateUpdate', state);
+              socket.emit('taskDeleted', { text: removed.title });
+              return;
+            } else {
+              // ¡NUEVO!: Dijo un nombre pero no existe. Avisamos y cancelamos el borrado.
+              socket.emit('voiceUnknown', { text });
+              return;
+            }
+          }
+
+          // Solo llega aquí si la ÚNICA palabra que pronunciaste fue "borrar"
           const idx = Math.min(state.tasksCursor, tasks.length - 1);
           const removed = tasks.splice(idx, 1)[0];
           await writeTasks(tasks);
           state.tasksCursor = Math.max(0, idx - 1);
           io.emit('stateUpdate', state);
           socket.emit('taskDeleted', { text: removed.title });
-          console.log('🗑️ Tarea eliminada por voz:', removed.title);
         } catch (err) { socket.emit('taskError'); }
         return;
       }
       
-      // NUEVO: Separar primera palabra (lista/persona) del resto de la tarea
-      const words = text.trim().split(/\s+/);
-      let assignee = 'Casa'; // Valor por defecto por si hay un error
-      let title = text;
+      // 2. Lógica para Añadir
+      if (/^(anadir|anade|crear|crea|pon|poner|agregar|agrega|nueva|nuevo)$/.test(actionWord)) {
+        words.shift(); // Eliminamos la palabra de acción ("añadir") de la lista de palabras
+        
+        if (words.length === 0) return; // Si solo dijo "Añadir" y nada más, se ignora
 
-      if (words.length > 1) {
-        // La primera palabra es el nombre. La ponemos en formato Título (Ej: "ana" -> "Ana")
-        const rawName = words[0];
-        assignee = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
-        // El resto de palabras forman la tarea
-        title = words.slice(1).join(' ');
-      } else {
-        // Si por casualidad el usuario dice solo una palabra (ej: "Pan"),
-        // lo guardamos como tarea en la lista general de "Casa"
-        title = words[0];
+        let assignee = 'Casa';
+        let title = '';
+
+        if (words.length > 1) {
+          // La siguiente palabra asume que es la persona
+          const rawName = words[0];
+          assignee = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+          // El resto es la tarea
+          title = words.slice(1).join(' ');
+        } else {
+          // Si por error dijo solo "Añadir pan", va a la lista general
+          title = words[0];
+        }
+
+        const newTask = { id: Date.now().toString(), title: title, assignee: assignee, done: false };
+        try {
+          let tasks = await readTasks();
+          tasks.push(newTask);
+          await writeTasks(tasks);
+          
+          // 💾 ¡NUEVO!: Actualizar la memoria visual antes de avisar a la pantalla
+          state.tasks = tasks.map(t => ({
+            id: t.id, person: t.assignee || 'Casa', title: t.title, done: t.done || false
+          }));
+          
+          state.tasksCursor = state.tasks.length - 1;
+          io.emit('stateUpdate', state);
+          
+          io.emit('taskAdded', { text: title });
+          socket.emit('taskSaved', { text: `${assignee}: ${title}` }); 
+        } catch (err) { socket.emit('taskError'); }
+        return;
       }
 
-      // Creamos la nueva tarea usando nuestras variables extraídas
-      const newTask = { id: Date.now().toString(), title: title, assignee: assignee };
-      
-      try {
-        let tasks = await readTasks();
-        tasks.push(newTask);
-        await writeTasks(tasks);
-        
-        io.emit('taskAdded', { text: title });
-        // Modificamos el feedback para ver en el móvil a quién se asignó
-        socket.emit('taskSaved', { text: `${assignee}: ${title}` }); 
-        console.log(`🎤 Tarea guardada para ${assignee}:`, title);
-      } catch (err) { socket.emit('taskError'); }
+      // 3. Si no entendió la primera palabra (ni añadir ni borrar)
+      socket.emit('voiceUnknown', { text });
       return;
     }
 
     // ── SECCIÓN: PAGOS ───────────────────────────────────────────────────────
     if (state.activeSection === 'payments') {
-      if (/^(pagado|pagar|marcar|ya pagu|cobrado)/.test(t)) {
-        const p = state.payments[state.paymentsCursor];
-        if (!p) { socket.emit('taskError'); return; }
-        p.paid = true;
+      const words = text.trim().split(/\s+/);
+      const actionWord = norm(words[0]);
+
+      // 1. Eliminar un pago (ej: "borrar coche", "quitar agua")
+      if (/^(eliminar|borrar|quitar|borra|elimina)$/.test(actionWord)) {
+        // Quitamos la primera palabra ("borrar") para quedarnos con el nombre buscado
+        const targetNameNorm = norm(words.slice(1).join(' '));
+        
+        if (state.payments.length === 0) { socket.emit('taskError'); return; }
+
+        // Si hay texto después de la palabra "borrar"
+        if (targetNameNorm !== '') {
+          // Buscar el pago por nombre
+          const exactIdx = state.payments.findIndex(p => norm(p.name) === targetNameNorm || targetNameNorm.includes(norm(p.name)));
+          
+          if (exactIdx !== -1) {
+            const removed = state.payments.splice(exactIdx, 1)[0];
+            state.paymentsCursor = Math.max(0, Math.min(state.paymentsCursor, state.payments.length - 1));
+            savePayments();
+            io.emit('stateUpdate', state);
+            socket.emit('taskDeleted', { text: removed.name });
+            return;
+          } else {
+            // ¡NUEVO!: Dijo un nombre pero no existe. Avisamos y cancelamos el borrado.
+            socket.emit('voiceUnknown', { text });
+            return;
+          }
+        }
+
+        // Solo llega aquí si la ÚNICA palabra pronunciada fue "borrar" (borra el seleccionado)
+        const idx = Math.min(state.paymentsCursor, state.payments.length - 1);
+        const removed = state.payments.splice(idx, 1)[0];
+        state.paymentsCursor = Math.max(0, idx - 1);
+        savePayments();
         io.emit('stateUpdate', state);
-        socket.emit('paymentPaid', { name: p.name });
-        console.log('💳 Pago marcado como pagado:', p.name);
+        socket.emit('taskDeleted', { text: removed.name });
         return;
       }
-      // "netflix 20 euros" / "gym 30€" → añadir pago
-      const match = t.match(/^(.+?)\s+([\d]+(?:[.,]\d+)?)\s*(?:euros?|€)?$/);
-      if (match) {
-        const rawName = match[1].trim();
-        const name    = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-        const amount  = parseFloat(match[2].replace(',', '.'));
-        const newPayment = { id: Date.now(), name, icon: '💳', amount, due: 'Sin fecha', category: 'otros', paid: false };
-        state.payments.push(newPayment);
-        io.emit('stateUpdate', state);
-        socket.emit('paymentSaved', { name, amount });
-        console.log('💳 Pago añadido por voz:', name, amount);
-        return;
+
+      // TRUCO: Si la frase empieza por "añadir", "crear", etc., se lo quitamos a la frase 
+      // para que el resto del código funcione exactamente igual que antes.
+      let currentText = t;
+      let currentTNorm = tNorm;
+      
+      if (/^(anadir|anade|crear|crea|pon|poner|agregar|agrega|nuevo|nueva)$/.test(actionWord)) {
+        currentText = words.slice(1).join(' ');
+        currentTNorm = norm(currentText);
       }
+
+      // Si después de quitar "añadir" se quedó vacío, no hacemos nada
+      if (currentText.trim() === '') {
+         socket.emit('voiceUnknown', { text });
+         return;
+      }
+
+      // 2. Poner en PENDIENTE o CREAR vacío si no existe (ej: "[añadir] coche pendiente")
+      if (/(pendiente|no pagad[oa]|sin pagar|debe)/.test(currentTNorm)) {
+        let rawName = currentText.replace(/(pendiente|no pagado|no pagada|sin pagar|debe)/gi, '').trim();
+        
+        if (rawName === '') {
+           const p = state.payments[state.paymentsCursor];
+           if (!p) { socket.emit('taskError'); return; }
+           p.paid = false;
+           savePayments();
+           io.emit('stateUpdate', state);
+           return;
+        }
+
+        let targetPayment = null;
+        let targetIdx = -1;
+
+        for (let i = 0; i < state.payments.length; i++) {
+           if (norm(state.payments[i].name) === norm(rawName) || currentTNorm.includes(norm(state.payments[i].name))) {
+               targetPayment = state.payments[i];
+               targetIdx = i;
+               break;
+           }
+        }
+
+        if (targetPayment) {
+           targetPayment.paid = false;
+           state.paymentsCursor = targetIdx; 
+           savePayments();
+           io.emit('stateUpdate', state);
+           return;
+        } else {
+           const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+           const newPayment = { id: Date.now(), name: name, icon: '💳', amount: 0, due: 'Sin fecha', category: 'otros', paid: false };
+           state.payments.push(newPayment);
+           state.paymentsCursor = state.payments.length - 1;
+           savePayments();
+           io.emit('stateUpdate', state);
+           return;
+        }
+      }
+
+      // 3. Marcar como PAGADO (ej: "agua pagada")
+      if (/(pagad[oa]|pagar|marcar|ya pagu|cobrad[oa])/.test(currentTNorm)) {
+        let targetPayment = null;
+        let targetIdx = -1;
+
+        for (let i = 0; i < state.payments.length; i++) {
+           if (currentTNorm.includes(norm(state.payments[i].name))) {
+               targetPayment = state.payments[i];
+               targetIdx = i;
+               break;
+           }
+        }
+
+        if (targetPayment) {
+           targetPayment.paid = true;
+           state.paymentsCursor = targetIdx;
+           savePayments();
+           io.emit('stateUpdate', state);
+           socket.emit('paymentPaid', { name: targetPayment.name });
+           return;
+        } else {
+           const p = state.payments[state.paymentsCursor];
+           if (!p) { socket.emit('taskError'); return; }
+           p.paid = true;
+           savePayments();
+           io.emit('stateUpdate', state);
+           socket.emit('paymentPaid', { name: p.name });
+           return;
+        }
+      }
+
+      // 4. Añadir nuevo pago con cantidad (dígitos o hablado)
+      let cleaned = currentText.replace(/\s*(?:euros?|€)$/i, '').trim();
+      let wordsArray = cleaned.split(/\s+/);
+      let nameWords = [];
+      let amountWords = [];
+
+      // Añadimos centenas y miles al diccionario
+      const numWords = ["cero","un","uno","una","dos","tres","cuatro","cinco","seis","siete","ocho","nueve",
+          "diez","once","doce","trece","catorce","quince","dieciseis","dieciséis","diecisiete","dieciocho","diecinueve",
+          "veinte","veintiun","veintiún","veintiuno","veintidos","veintidós","veintitres","veintitrés","veinticuatro","veinticinco","veintiseis","veintiséis","veintisiete","veintiocho","veintinueve",
+          "treinta","cuarenta","cincuenta","sesenta","setenta","ochenta","noventa","cien","ciento",
+          "doscientos","trescientos","cuatrocientos","quinientos","seiscientos","setecientos","ochocientos","novecientos","mil",
+          "con","coma","punto","y","euro","euros","€","centimo","centimos","céntimo","céntimos"];
+
+      // Recorremos la frase desde el final hacia el principio
+      for (let i = wordsArray.length - 1; i >= 0; i--) {
+          let w = wordsArray[i].toLowerCase();
+          // Convertimos cualquier apóstrofe o coma en punto para que parseFloat no se vuelva loco
+          if (!isNaN(parseFloat(w.replace(/[,']/g, '.'))) || numWords.includes(w)) {
+              amountWords.unshift(wordsArray[i]); 
+          } else {
+              nameWords = wordsArray.slice(0, i + 1);
+              break;
+          }
+      }
+
+      if (nameWords.length > 0 && amountWords.length > 0) {
+          const rawName = nameWords.join(' ');
+          const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+          
+          let amountStr = amountWords.join(' ').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[,']/g, '.');
+          let amount = 0;
+
+          // Limpiamos la frase de "euros" o "centimos" si el móvil ya lo pilló en dígitos perfectos
+          let digitsOnlyStr = amountStr.replace(/\s*(?:euros?|€|centimos?)/g, '').trim();
+
+          if (/^\d+(\.\d+)?$/.test(digitsOnlyStr)) {
+              amount = parseFloat(digitsOnlyStr);
+          } else {
+              const map = {
+                  'cero':0, 'un':1, 'uno':1, 'una':1, 'dos':2, 'tres':3, 'cuatro':4, 'cinco':5, 'seis':6, 'siete':7, 'ocho':8, 'nueve':9,
+                  'diez':10, 'once':11, 'doce':12, 'trece':13, 'catorce':14, 'quince':15, 'dieciseis':16, 'diecisiete':17, 'dieciocho':18, 'diecinueve':19,
+                  'veinte':20, 'veintiun':21, 'veintiuno':21, 'veintidos':22, 'veintitres':23, 'veinticuatro':24, 'veinticinco':25, 'veintiseis':26, 'veintisiete':27, 'veintiocho':28, 'veintinueve':29,
+                  'treinta':30, 'cuarenta':40, 'cincuenta':50, 'sesenta':60, 'setenta':70, 'ochenta':80, 'noventa':90, 'cien':100, 'ciento':100,
+                  'doscientos':200, 'trescientos':300, 'cuatrocientos':400, 'quinientos':500, 'seiscientos':600, 'setecientos':700, 'ochocientos':800, 'novecientos':900
+              };
+
+              let parts = amountStr.split(/\s+(?:con|coma|punto)\s+/);
+              
+              function calcSum(s) {
+                  if (!s) return 0;
+                  let sum = 0;
+                  for (let w of s.split(/\s+/)) {
+                      if (w === 'mil') {
+                          sum = sum === 0 ? 1000 : sum * 1000;
+                      } else if (map[w] !== undefined) {
+                          sum += map[w];
+                      } else if (!isNaN(parseFloat(w))) {
+                          sum += parseFloat(w);
+                      }
+                  }
+                  return sum;
+              }
+
+              let intVal = calcSum(parts[0]);
+              let decVal = parts.length > 1 ? calcSum(parts[1]) : 0;
+              let finalDec = 0;
+              
+              if (decVal > 0) {
+                  let decStr = parts[1].trim();
+                  if (decStr.includes('centimo') || decStr.match(/^0/) || decStr.match(/^cero/)) {
+                      finalDec = decVal / 100;
+                  } else {
+                      if (decVal < 10) finalDec = decVal / 10;
+                      else if (decVal < 100) finalDec = decVal / 100;
+                      else finalDec = decVal / 1000;
+                  }
+              }
+              amount = intVal + finalDec;
+          }
+
+          const newPayment = { id: Date.now(), name, icon: '💳', amount, due: 'Sin fecha', category: 'otros', paid: false };
+          state.payments.push(newPayment);
+          
+          state.paymentsCursor = state.payments.length - 1;
+          savePayments();
+          io.emit('stateUpdate', state);
+          socket.emit('taskSaved', { text: `Pago: ${name} (${amount.toFixed(2)}€)` });
+          return;
+      }
+      
       socket.emit('voiceUnknown', { text });
       return;
     }
 
     // ── SECCIÓN: LUCES ───────────────────────────────────────────────────────
     if (state.activeSection === 'lights') {
-      const l = state.lights[state.lightsCursor];
-      if (!l) { socket.emit('taskError'); return; }
-      if (TOGGLE_OFF.test(t)) { l.on = false; }
-      else if (TOGGLE_ON.test(t)) { l.on = true; }
-      else { socket.emit('voiceUnknown', { text }); return; }
-      io.emit('stateUpdate', state);
-      socket.emit('lightToggled', { name: l.name, on: l.on });
-      console.log('💡 Luz', l.name, l.on ? 'encendida' : 'apagada', 'por voz');
-      return;
+      let targetLight = null;
+      let targetIdx = -1;
+
+      // Buscar si el texto contiene el nombre de la luz o habitación (ej: "Salón")
+      for (let i = 0; i < state.lights.length; i++) {
+         if (tNorm.includes(norm(state.lights[i].name)) || tNorm.includes(norm(state.lights[i].room))) {
+             targetLight = state.lights[i];
+             targetIdx = i;
+             break;
+         }
+      }
+
+      if (targetLight) {
+         if (TOGGLE_OFF.test(t)) targetLight.on = false;
+         else if (TOGGLE_ON.test(t)) targetLight.on = true;
+         else { socket.emit('voiceUnknown', { text }); return; }
+
+         state.lightsCursor = targetIdx; // Movemos el puntero a esa luz
+         saveLights();
+         io.emit('stateUpdate', state);
+         socket.emit('lightToggled', { name: targetLight.name, on: targetLight.on });
+         return;
+      } else {
+         // Fallback a la luz seleccionada si no dijo nombre
+         const l = state.lights[state.lightsCursor];
+         if (!l) { socket.emit('taskError'); return; }
+         if (TOGGLE_OFF.test(t)) { l.on = false; }
+         else if (TOGGLE_ON.test(t)) { l.on = true; }
+         else { socket.emit('voiceUnknown', { text }); return; }
+         saveLights();
+         io.emit('stateUpdate', state);
+         socket.emit('lightToggled', { name: l.name, on: l.on });
+         return;
+      }
     }
 
     // ── SECCIÓN: OBJETOS ─────────────────────────────────────────────────────
     if (state.activeSection === 'objects') {
-      const o = state.objects[state.objectsCursor];
-      if (!o) { socket.emit('taskError'); return; }
-      if (TOGGLE_OFF.test(t)) { o.active = false; }
-      else if (TOGGLE_ON.test(t)) { o.active = true; }
-      else { socket.emit('voiceUnknown', { text }); return; }
-      io.emit('stateUpdate', state);
-      socket.emit('objectToggled', { name: o.name, active: o.active });
-      console.log('🏠 Objeto', o.name, o.active ? 'activado' : 'desactivado', 'por voz');
+      let targetObj = null;
+      let targetIdx = -1;
+
+      // Buscar si el texto contiene el nombre del objeto (ej: "Lavadora")
+      for (let i = 0; i < state.objects.length; i++) {
+         if (tNorm.includes(norm(state.objects[i].name))) {
+             targetObj = state.objects[i];
+             targetIdx = i;
+             break;
+         }
+      }
+
+      if (targetObj) {
+         if (TOGGLE_OFF.test(t)) targetObj.active = false;
+         else if (TOGGLE_ON.test(t)) targetObj.active = true;
+         else { socket.emit('voiceUnknown', { text }); return; }
+
+         state.objectsCursor = targetIdx; 
+         saveObjects();
+         io.emit('stateUpdate', state);
+         socket.emit('objectToggled', { name: targetObj.name, active: targetObj.active });
+         return;
+      } else {
+         const o = state.objects[state.objectsCursor];
+         if (!o) { socket.emit('taskError'); return; }
+         if (TOGGLE_OFF.test(t)) { o.active = false; }
+         else if (TOGGLE_ON.test(t)) { o.active = true; }
+         else { socket.emit('voiceUnknown', { text }); return; }
+         saveObjects();
+         io.emit('stateUpdate', state);
+         socket.emit('objectToggled', { name: o.name, active: o.active });
+         return;
+      }
+    }
+
+    // ── PANTALLA PRINCIPAL (MENÚ) ───────────────────────────────────────────
+    if (state.activeSection === null) {
+      if (/(luz|luces)/.test(tNorm)) { 
+        state.activeSection = 'lights'; 
+        io.emit('stateUpdate', state); 
+        socket.emit('taskSaved', { text: '💡 Abriendo Luces' }); 
+        return; 
+      }
+      if (/(tarea|tareas)/.test(tNorm)) { 
+        state.activeSection = 'tasks'; 
+        io.emit('stateUpdate', state); 
+        socket.emit('taskSaved', { text: '✅ Abriendo Tareas' }); 
+        return; 
+      }
+      if (/(objeto|objetos|domotica)/.test(tNorm)) { 
+        state.activeSection = 'objects'; 
+        io.emit('stateUpdate', state); 
+        socket.emit('taskSaved', { text: '🏠 Abriendo Objetos' }); 
+        return; 
+      }
+      if (/(pago|pagos|cuenta|cuentas)/.test(tNorm)) { 
+        state.activeSection = 'payments'; 
+        io.emit('stateUpdate', state); 
+        socket.emit('taskSaved', { text: '💳 Abriendo Pagos' }); 
+        return; 
+      }
+      
+      socket.emit('voiceUnknown', { text });
       return;
     }
 
-    // ── Cualquier otra sección ───────────────────────────────────────────────
+    // Cualquier otra sección
     socket.emit('taskIgnored', { text });
   });
 
@@ -358,24 +672,43 @@ io.on('connection', socket => {
   });
 
   socket.on('back', () => {
-    state.activeSection = null;
-    io.emit('stateUpdate', state);
+    if (state.activeSection !== null) {
+      state.activeSection = null;
+      io.emit('stateUpdate', state);
+      console.log('🔙 Regresando al menú principal');
+    }
   });
 
-  socket.on('action', () => {
-    if (state.activeSection === 'lights') {
-      const l = state.lights[state.lightsCursor];
-      if (l) l.on = !l.on;
-    } else if (state.activeSection === 'tasks') {
-      const t = state.tasks[state.tasksCursor];
-      if (t) t.done = !t.done;
-    } else if (state.activeSection === 'objects') {
-      const o = state.objects[state.objectsCursor];
-      if (o) o.active = !o.active;
-    } else if (state.activeSection === 'payments') {
-      const p = state.payments[state.paymentsCursor];
-      if (p) p.paid = !p.paid;
+  socket.on('action', async () => {
+    if (state.activeSection === null) return;
+    
+    if (state.activeSection === 'lights' && state.lights.length > 0) {
+      state.lights[state.lightsCursor].on = !state.lights[state.lightsCursor].on;
+      saveLights(); // 💾 ¡NUEVO!: Guardar luces
     }
+    else if (state.activeSection === 'objects' && state.objects.length > 0) {
+      state.objects[state.objectsCursor].active = !state.objects[state.objectsCursor].active;
+      saveObjects(); // 💾 ¡NUEVO!: Guardar objetos
+    }
+    else if (state.activeSection === 'payments' && state.payments.length > 0) {
+      state.payments[state.paymentsCursor].paid = !state.payments[state.paymentsCursor].paid;
+      savePayments(); // 💾 ¡NUEVO!: Guardar pagos
+    }
+    else if (state.activeSection === 'tasks') {
+      try {
+        let dbTasks = await readTasks();
+        if (dbTasks.length > 0 && state.tasksCursor < dbTasks.length) {
+          dbTasks[state.tasksCursor].done = !dbTasks[state.tasksCursor].done;
+          await writeTasks(dbTasks);
+          
+          // 💾 ¡NUEVO!: Actualizar la memoria visual para que la pantalla lo vea al instante
+          state.tasks = dbTasks.map(t => ({
+            id: t.id, person: t.assignee || 'Casa', title: t.title, done: t.done || false
+          }));
+        }
+      } catch(e) {}
+    }
+    
     io.emit('stateUpdate', state);
   });
 });

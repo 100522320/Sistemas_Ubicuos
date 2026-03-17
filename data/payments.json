@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1773770761864,
+    "name": "Coche",
+    "icon": "💳",
+    "amount": 50,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": true
+  },
+  {
+    "id": 1773770769133,
+    "name": "Furgoneta",
+    "icon": "💳",
+    "amount": 37.2,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": true
+  },
+  {
+    "id": 1773771441724,
+    "name": "Moto",
+    "icon": "💳",
+    "amount": 5,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1773771464458,
+    "name": "Ratón",
+    "icon": "💳",
+    "amount": 7,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  }
+]

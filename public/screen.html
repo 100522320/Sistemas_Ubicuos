@@ -395,6 +395,18 @@
   .av-Sofia  { background:rgba(184,106,46,.2);   color:var(--copper); border:1px solid rgba(184,106,46,.3); }
   .av-Casa   { background:rgba(126,201,138,.12); color:var(--green);  border:1px solid rgba(126,201,138,.22); }
   .av-Movil  { background:rgba(240,230,208,.1);  color:var(--cream);  border:1px solid rgba(240,230,208,.2); }
+
+  /* ── Separador para que no colisione con la leyenda ── */
+  #payments-list {
+    padding-bottom: 140px; 
+    scroll-padding-bottom: 140px; 
+  }
+
+  /* ── Separador para Tareas ── */
+  .task-column {
+    padding-bottom: 160px;
+  }
+
 </style>
 </head>
 <body>
@@ -659,40 +671,72 @@
   }
 
   function renderTasks(s) {
-    const container = document.getElementById('tasks-container');
-    if (!s.tasks.length) {
-      container.innerHTML = `<div style="padding:20px;color:var(--muted);text-align:center;width:100%">No hay tareas. Añade una arriba.</div>`;
-      return;
+    const list = document.getElementById('tasks-container');
+    list.className = ''; 
+    list.style.display = 'flex';
+    list.style.flexDirection = 'row';
+    list.style.gap = '30px';
+    list.style.paddingBottom = '160px';
+    list.style.overflowX = 'hidden';
+    list.style.alignItems = 'flex-start';
+
+    const persons = [...new Set(s.tasks.map(t => t.person || t.assignee || 'Casa'))];
+    let html = '';
+
+    persons.forEach(p => {
+        html += `<div style="flex: 0 0 380px; display: flex; flex-direction: column; gap: 15px; position: relative;">`;
+        
+        // El letrero pegajoso con fondo para que no se transparente
+        html += `  <h3 style="
+                    margin: 0; 
+                    color: var(--amber); 
+                    border-bottom: 2px solid rgba(232,160,69,0.3); 
+                    padding: 15px 0 10px 0; 
+                    font-size: 1.4rem;
+                    position: sticky; 
+                    top: 0; 
+                    background: var(--bg); 
+                    z-index: 10;
+                    width: 100%;
+                  ">👤 ${p}</h3>`;
+        
+        s.tasks.forEach((t, originalIndex) => {
+            if ((t.person || t.assignee || 'Casa') === p) {
+                // CORRECCIÓN: Usamos t.title || t.text para evitar el 'undefined'
+                const contenidoTarea = t.title || t.text || 'Tarea sin título';
+                
+                html += `
+                    <div class="payment-item ${t.done ? 'paid' : ''} ${originalIndex === s.tasksCursor ? 'active-cursor' : ''}" 
+                         data-index="${originalIndex}" 
+                         style="width: auto; margin-bottom: 0;">
+                        <div class="pay-icon-wrap" style="background: ${t.done ? 'rgba(76,175,80,0.1)' : 'rgba(255,152,0,0.1)'}; color: ${t.done ? '#4CAF50' : '#FF9800'};">
+                            ${t.done ? '✅' : '⏳'}
+                        </div>
+                        <div class="pay-info">
+                            <div class="pay-name" style="font-size: 1.15rem;">${contenidoTarea}</div>
+                        </div>
+                        <div>
+                            <div class="pay-status">${t.done ? 'Hecha' : 'Pendiente'}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        html += `</div>`;
+    });
+
+    list.innerHTML = html;
+
+    const activeCard = list.querySelector(`.payment-item[data-index="${s.tasksCursor}"]`);
+    if (activeCard) {
+        // Al usar block: 'center', la tarea seleccionada no se pegará al letrero de arriba
+        activeCard.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
     }
-    const persons = [...new Set(s.tasks.map(t => t.person))];
-    container.innerHTML = persons.map(person => {
-      const personTasks = s.tasks.filter(t => t.person === person);
-      const doneCount   = personTasks.filter(t => t.done).length;
-      const avClass     = 'av-' + person.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s.*/,'');
-      return `
-        <div class="person-column">
-          <div class="person-header">
-            <div class="person-avatar ${avClass}">${person.charAt(0)}</div>
-            <div class="person-name">${person}</div>
-            <div class="person-count">${doneCount}/${personTasks.length}</div>
-          </div>
-          ${personTasks.map(t => {
-            const gi = s.tasks.indexOf(t);
-            return `
-              <div class="task-item ${t.done?'done':''} ${gi===s.tasksCursor?'active-cursor':''}">
-                <div class="task-check">${t.done?'✓':''}</div>
-                <div class="task-text">${t.text}</div>
-                <div class="task-priority ${t.priority}">${t.priority}</div>
-              </div>`;
-          }).join('')}
-        </div>`;
-    }).join('');
-    const items = container.querySelectorAll('.task-item');
-    if (items[s.tasksCursor]) items[s.tasksCursor].scrollIntoView({block:'nearest',behavior:'smooth',inline:'center'});
-  }
+}
 
   function renderObjects(s) {
-    document.getElementById('objects-grid').innerHTML = s.objects.map((o,i) => `
+    const g = document.getElementById('objects-grid');
+    g.innerHTML = s.objects.map((o,i) => `
       <div class="object-card ${o.active?'active-state':''} ${i===s.objectsCursor?'active-cursor':''}">
         <div class="obj-icon">${o.icon}</div>
         <div class="obj-name">${o.name}</div>
@@ -701,6 +745,10 @@
           <div class="dot"></div>${o.active?'Activo':'Inactivo'}
         </div>
       </div>`).join('');
+      
+    // ¡NUEVO!: Hacemos que la pantalla siga al puntero
+    const cards = g.querySelectorAll('.object-card');
+    if (cards[s.objectsCursor]) cards[s.objectsCursor].scrollIntoView({block:'nearest',behavior:'smooth'});
   }
 
   function renderPayments(s) {
@@ -715,7 +763,9 @@
         <div class="pay-sum-label">Pagado</div>
         <div class="pay-sum-value">${totalPaid.toFixed(2)} €</div>
       </div>`;
-    document.getElementById('payments-list').innerHTML = s.payments.map((p,i) => `
+      
+    const list = document.getElementById('payments-list');
+    list.innerHTML = s.payments.map((p,i) => `
       <div class="payment-item ${p.paid?'paid':''} ${i===s.paymentsCursor?'active-cursor':''}">
         <div class="pay-icon-wrap">${p.icon}</div>
         <div class="pay-info">
@@ -728,6 +778,10 @@
           <div class="pay-status">${p.paid ? 'pagado' : 'pendiente'}</div>
         </div>
       </div>`).join('');
+
+    // ¡NUEVO!: Hacemos que la lista de pagos haga scroll si el elemento no se ve
+    const items = list.querySelectorAll('.payment-item');
+    if (items[s.paymentsCursor]) items[s.paymentsCursor].scrollIntoView({block:'nearest',behavior:'smooth'});
   }
 
   // ── TECLADO ──

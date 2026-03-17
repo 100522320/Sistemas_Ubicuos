@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Techo",
+    "room": "Salón",
+    "icon": "💡",
+    "on": false
+  },
+  {
+    "name": "Lectura",
+    "room": "Salón",
+    "icon": "📖",
+    "on": false
+  },
+  {
+    "name": "Principal",
+    "room": "Cocina",
+    "icon": "🍳",
+    "on": true
+  },
+  {
+    "name": "Pasillo",
+    "room": "Pasillo",
+    "icon": "🚪",
+    "on": false
+  }
+]

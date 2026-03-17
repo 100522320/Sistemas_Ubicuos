@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Termostato",
+    "icon": "🌡️",
+    "value": "22°C",
+    "active": true
+  },
+  {
+    "name": "Persianas",
+    "icon": "🪟",
+    "value": "Abiertas",
+    "active": false
+  }
+]

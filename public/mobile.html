@@ -328,6 +328,7 @@
   const COOLDOWN_MS   = 280;
   let lastShakeTime = 0;
   let currentSection = null;
+  let lastNavTime = 0;
 
   // ── Audio context (Web Audio API — sin dependencias) ────────────────────────
   let audioCtx = null;
@@ -587,8 +588,12 @@
       else if (dBeta  < -THRESHOLD_DEG) dir = 'up';
     }
 
-    if (beta < -60 && now - lastDirTime > 800) {
-      sendEnter(); lastDirTime = now; return;
+    if (beta > 70 && now - lastDirTime > 800) {
+      if (currentSection !== null) { // Solo retrocede si estamos dentro de una zona
+        sendBack(); 
+        lastDirTime = now; 
+      }
+      return;
     }
 
     if (dir && dir !== lastDir) {
@@ -606,7 +611,7 @@
     const now   = Date.now();
     
     // Hemos bajado el umbral de 30 a 25 para que no haya que agitar tan fuerte
-    if (total > 25 && now - lastShakeTime > 800) {
+    if (total > 40 && now - lastShakeTime > 800) {
       lastShakeTime = now;
       
       if (currentSection === null) {
@@ -618,22 +623,34 @@
   }
 
   // ── Send events ──────────────────────────────────────────────────────────────
-  function navSend(dir) {
+  window.navSend = function(dir) {
+    const now = Date.now();
+    // Escudo de 250ms para ignorar los dobles toques "fantasma" de los móviles
+    if (now - lastNavTime < 250) return;
+    lastNavTime = now;
+    
     socket.emit('navigate', dir);
-    flash('↑↓←→ ' + dir.toUpperCase());
-    flashBtn('b-' + dir);
-    navigator.vibrate && navigator.vibrate(20);
-  }
+    if (navigator.vibrate) navigator.vibrate(15);
+  };
+
   function sendEnter() {
     socket.emit('enter');
     flash('↩ ENTRAR');
     navigator.vibrate && navigator.vibrate([30, 20, 30]);
   }
+
+  window.sendBack = function() {
+    socket.emit('back');
+    flash('🔙 ATRÁS');
+    if (navigator.vibrate) navigator.vibrate([30, 50, 30]); // Doble vibración corta
+  };
+
   function sendBack() {
     socket.emit('back');
     flash('✕ ATRÁS');
     navigator.vibrate && navigator.vibrate(40);
   }
+
   function sendAction() {
     socket.emit('action');
     flash('⚡ ACCIÓN');

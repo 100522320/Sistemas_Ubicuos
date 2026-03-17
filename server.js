@@ -142,8 +142,10 @@ io.on('connection', socket => {
 
   socket.emit('fullState', state);
 
-  socket.on('navigate', dir => {
+  // ¡Fíjate en el async!
+  socket.on('navigate', async dir => {
     if (state.activeSection === null) {
+      // Navegación en la pantalla principal (Menú 2x2)
       let { x, y } = state.cursor;
       if (dir === 'left')  x = Math.max(0, x - 1);
       if (dir === 'right') x = Math.min(GRID_W - 1, x + 1);
@@ -153,12 +155,79 @@ io.on('connection', socket => {
     } else {
       const key     = state.activeSection + 'Cursor';
       const listKey = state.activeSection;
-      const len     = state[listKey].length;
+
+      // ¡NUEVO!: Si estamos en tareas, sincronizamos con tasks.json antes de movernos
+      if (listKey === 'tasks') {
+         try {
+           const dbTasks = await readTasks();
+           state.tasks = dbTasks.map(t => ({
+             id: t.id,
+             person: t.assignee || 'Casa',
+             text: t.title,
+             done: t.done || false,
+             priority: t.priority || 'media'
+           }));
+         } catch(e) { console.error('Error leyendo tareas para navegar:', e); }
+      }
+
+      const list    = state[listKey];
+      const len     = list.length;
       let cur       = state[key];
-      if (dir === 'up')    cur = Math.max(0, cur - 1);
-      if (dir === 'down')  cur = Math.min(len - 1, cur + 1);
-      if (dir === 'left')  cur = Math.max(0, cur - 1);
-      if (dir === 'right') cur = Math.min(len - 1, cur + 1);
+
+      if (len > 0) {
+        // Por si alguna lista se ha acortado desde otra pantalla
+        if (cur >= len) cur = len - 1;
+
+        if (listKey === 'tasks') {
+          // Navegación 2D para Tareas (agrupado dinámicamente)
+          const persons = [...new Set(list.map(t => t.person))];
+          const cols = persons.map(p => {
+            let indices = [];
+            list.forEach((t, i) => {
+              if (t.person === p) indices.push(i);
+            });
+            return indices;
+          });
+
+          // Buscar en qué fila (r) y columna (c) estamos ahora
+          let c = 0, r = 0;
+          for (let i = 0; i < cols.length; i++) {
+            const rIdx = cols[i].indexOf(cur);
+            if (rIdx !== -1) { c = i; r = rIdx; break; }
+          }
+
+          // Aplicar la dirección
+          if (dir === 'left')  c = Math.max(0, c - 1);
+          if (dir === 'right') c = Math.min(cols.length - 1, c + 1);
+          if (dir === 'up')    r = Math.max(0, r - 1);
+          if (dir === 'down')  r = Math.min(cols[c].length - 1, r + 1);
+
+          // Si cambiamos de columna, evitar salirnos si la nueva columna es más corta
+          r = Math.min(r, cols[c].length - 1);
+          cur = cols[c][r];
+
+        } else {
+          // Navegación 2D genérica según el layout de pantalla
+          let numCols = 1;
+          if (listKey === 'lights' || listKey === 'objects') numCols = 4;
+          if (listKey === 'payments') numCols = 2;
+
+          let r = Math.floor(cur / numCols);
+          let c = cur % numCols;
+          const numRows = Math.ceil(len / numCols);
+
+          if (dir === 'left')  c = Math.max(0, c - 1);
+          if (dir === 'right') c = Math.min(numCols - 1, c + 1);
+          if (dir === 'up')    r = Math.max(0, r - 1);
+          if (dir === 'down')  r = Math.min(numRows - 1, r + 1);
+
+          let nextIdx = r * numCols + c;
+          if (nextIdx >= len) {
+            nextIdx = len - 1; 
+          }
+          cur = nextIdx;
+        }
+      }
       state[key] = cur;
     }
     io.emit('stateUpdate', state);
@@ -187,14 +256,36 @@ io.on('connection', socket => {
         } catch (err) { socket.emit('taskError'); }
         return;
       }
-      const newTask = { id: Date.now().toString(), title: text, assignee: 'Móvil' };
+      
+      // NUEVO: Separar primera palabra (lista/persona) del resto de la tarea
+      const words = text.trim().split(/\s+/);
+      let assignee = 'Casa'; // Valor por defecto por si hay un error
+      let title = text;
+
+      if (words.length > 1) {
+        // La primera palabra es el nombre. La ponemos en formato Título (Ej: "ana" -> "Ana")
+        const rawName = words[0];
+        assignee = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+        // El resto de palabras forman la tarea
+        title = words.slice(1).join(' ');
+      } else {
+        // Si por casualidad el usuario dice solo una palabra (ej: "Pan"),
+        // lo guardamos como tarea en la lista general de "Casa"
+        title = words[0];
+      }
+
+      // Creamos la nueva tarea usando nuestras variables extraídas
+      const newTask = { id: Date.now().toString(), title: title, assignee: assignee };
+      
       try {
         let tasks = await readTasks();
         tasks.push(newTask);
         await writeTasks(tasks);
-        io.emit('taskAdded', { text });
-        socket.emit('taskSaved', { text });
-        console.log('🎤 Tarea guardada:', text);
+        
+        io.emit('taskAdded', { text: title });
+        // Modificamos el feedback para ver en el móvil a quién se asignó
+        socket.emit('taskSaved', { text: `${assignee}: ${title}` }); 
+        console.log(`🎤 Tarea guardada para ${assignee}:`, title);
       } catch (err) { socket.emit('taskError'); }
       return;
     }

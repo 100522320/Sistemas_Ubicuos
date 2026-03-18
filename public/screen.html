@@ -159,8 +159,14 @@
 
   /* ── LIGHTS ── */
   #lights-grid {
-    display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+    display:grid; 
+    grid-template-columns:repeat(4,1fr); 
+    gap:14px;
     height:calc(100vh - 190px);
+    align-content: start; /* Evita que las tarjetas se estiren */
+    overflow-y: auto;     /* Permite scroll si hay muchas */
+    padding: 12px 12px 40px 12px; 
+    margin: -12px;
   }
   .light-card {
     background:var(--surface); border:1px solid var(--border);
@@ -277,6 +283,10 @@
   #objects-grid {
     display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
     height:calc(100vh - 190px);
+    align-content: start; /* Evita que las tarjetas se estiren */
+    overflow-y: auto;     /* Permite scroll si hay muchos */
+    padding: 12px 12px 40px 12px; 
+    margin: -12px;
   }
   .object-card {
     background:var(--surface); border:1px solid var(--border);

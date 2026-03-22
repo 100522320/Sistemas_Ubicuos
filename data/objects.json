@@ -1,14 +1,89 @@
 [
   {
-    "name": "Termostato",
-    "icon": "🌡️",
-    "value": "22°C",
-    "active": true
+    "id": 1,
+    "name": "Llaves",
+    "history": [
+      {
+        "location": "Cocina",
+        "who": "Christian",
+        "when": "2025-01-01T10:00:00.000Z"
+      }
+    ]
   },
   {
-    "name": "Persianas",
-    "icon": "🪟",
-    "value": "Abiertas",
-    "active": false
+    "id": 2,
+    "name": "Mando TV",
+    "history": [
+      {
+        "location": "Salón",
+        "who": "Adrian",
+        "when": "2025-01-01T09:00:00.000Z"
+      },
+      {
+        "location": "La cocina",
+        "who": "Adrian",
+        "when": "2026-03-22T10:33:37.434Z"
+      },
+      {
+        "location": "El salon",
+        "who": "Adrian",
+        "when": "2026-03-22T10:34:27.342Z"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Cargador",
+    "history": [
+      {
+        "location": "La cocina",
+        "who": "Adrian",
+        "when": "2026-03-22T10:26:00.352Z"
+      },
+      {
+        "location": "El salon",
+        "who": "Adrian",
+        "when": "2026-03-22T10:33:12.793Z"
+      },
+      {
+        "location": "El salon",
+        "who": "Christian",
+        "when": "2026-03-22T10:33:46.178Z"
+      }
+    ]
+  },
+  {
+    "id": 1774175567791,
+    "name": "Mando de la television",
+    "icon": "📦",
+    "history": [
+      {
+        "location": "La cocina",
+        "who": "Adrian",
+        "when": "2026-03-22T10:32:47.791Z"
+      },
+      {
+        "location": "La cocina",
+        "who": "Adrian",
+        "when": "2026-03-22T10:35:36.302Z"
+      }
+    ]
+  },
+  {
+    "id": 1774175704839,
+    "name": "Calcetin",
+    "icon": "📦",
+    "history": [
+      {
+        "location": "La cocina",
+        "who": "Christian",
+        "when": "2026-03-22T10:35:04.839Z"
+      },
+      {
+        "location": "La cocina",
+        "who": "Adrian",
+        "when": "2026-03-22T10:35:23.168Z"
+      }
+    ]
   }
 ]

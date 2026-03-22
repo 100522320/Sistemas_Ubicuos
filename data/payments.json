@@ -34,5 +34,14 @@
     "due": "Sin fecha",
     "category": "otros",
     "paid": false
+  },
+  {
+    "id": 1774173887372,
+    "name": "Nuevos",
+    "icon": "💳",
+    "amount": 62,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
   }
 ]

@@ -35,8 +35,8 @@ El servidor se levanta en **http://localhost:3000**
 ### Giroscopio
 - **Inclinar izquierda/derecha** → Navegar izquierda/derecha
 - **Inclinar adelante/atrás** → Navegar arriba/abajo
-- **Inclinar la pantalla hacia abajo (beta < -60°)** → ENTRAR en sección
-- **Agitar el móvil** → ACCIÓN (encender/apagar/completar)
+- **Inlinar hacia el techo el movil** → Salir de sección
+- **Agitar el móvil** → ENTRAR en sección / ACCIÓN (encender/apagar/completar)
 
 ### Botones
 - **▲▼◀▶** → Navegar

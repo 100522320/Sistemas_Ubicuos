@@ -18,11 +18,11 @@
     --amber2:  #c47a20;
     --green:   #7ec98a;
     --red:     #e06060;
+    --blue:    #6ab0e8;
     --text:    #e8dcc8;
     --muted:   #7a6a55;
     --cream:   #f0e6d0;
     --accent:  #e8a045;
-    --yellow:  #e8a045;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { height: 100%; }
@@ -37,155 +37,71 @@
     background-image: radial-gradient(circle at 50% 0%, rgba(232,160,69,.07) 0%, transparent 60%);
     pointer-events: none;
   }
-
   #wrapper {
     height: 100dvh; display: flex; flex-direction: column;
-    align-items: center; padding: 20px 16px;
-    gap: 14px;
+    align-items: center; padding: 20px 16px; gap: 14px;
   }
 
   /* ── header ── */
-  #mob-header {
-    width: 100%; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 4px;
-  }
-  #mob-header .logo {
-    font-family: 'Cinzel', serif; font-size: .82rem; font-weight: 600;
-    color: var(--amber); letter-spacing: .18em;
-    text-shadow: 0 0 18px rgba(232,160,69,.5);
-  }
-  #conn-status {
-    display: flex; align-items: center; gap: 6px;
-    font-size: .72rem; color: var(--muted); letter-spacing: .05em;
-  }
-  #conn-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--red); transition: background .3s;
-  }
+  #mob-header { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+  #mob-header .logo { font-family: 'Cinzel', serif; font-size: .82rem; font-weight: 600; color: var(--amber); letter-spacing: .18em; text-shadow: 0 0 18px rgba(232,160,69,.5); }
+  #conn-status { display: flex; align-items: center; gap: 6px; font-size: .72rem; color: var(--muted); letter-spacing: .05em; }
+  #conn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); transition: background .3s; }
   #conn-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
 
   /* ── info panel ── */
-  #info-panel {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 14px 18px;
-    display: flex; flex-direction: column; gap: 4px;
-  }
-  #panel-section {
-    font-family: 'DM Mono', monospace; font-size: .72rem; font-weight: 500;
-    color: var(--amber); letter-spacing: .1em; text-transform: uppercase;
-  }
+  #info-panel { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; }
+  #panel-section { font-family: 'DM Mono', monospace; font-size: .72rem; font-weight: 500; color: var(--amber); letter-spacing: .1em; text-transform: uppercase; }
   #panel-item { font-size: .88rem; color: var(--text); font-weight: 500; }
 
   /* ── mode toggle ── */
   #mode-toggle { width: 100%; display: flex; gap: 8px; }
-  .mode-btn {
-    flex: 1; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px; text-align: center;
-    font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--muted); cursor: pointer; transition: all .2s;
-  }
-  .mode-btn.active {
-    background: rgba(232,160,69,.1); border-color: var(--amber); color: var(--amber);
-  }
+  .mode-btn { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; font-size: .78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: all .2s; }
+  .mode-btn.active { background: rgba(232,160,69,.1); border-color: var(--amber); color: var(--amber); }
 
   /* ── gyro area ── */
-  #gyro-area {
-    width: 100%; flex: 1;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; position: relative; overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-  }
+  #gyro-area { width: 100%; flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
   #gyro-area.hidden { display: none; }
-  #gyro-bubble {
-    width: 60px; height: 60px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, rgba(232,160,69,.9), rgba(196,122,32,.5));
-    box-shadow: 0 0 28px rgba(232,160,69,.45);
-    position: absolute; transition: left .1s, top .1s;
-  }
-  #gyro-center {
-    width: 12px; height: 12px; border-radius: 50%;
-    border: 2px solid rgba(232,160,69,.3);
-    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
-  }
+  #gyro-bubble { width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(232,160,69,.9), rgba(196,122,32,.5)); box-shadow: 0 0 28px rgba(232,160,69,.45); position: absolute; transition: left .1s, top .1s; }
+  #gyro-center { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(232,160,69,.3); position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); }
   #gyro-crosshair { position: absolute; inset: 0; pointer-events: none; }
-  #gyro-crosshair::before,
-  #gyro-crosshair::after {
-    content: ''; position: absolute; background: rgba(232,160,69,.07);
-  }
+  #gyro-crosshair::before, #gyro-crosshair::after { content: ''; position: absolute; background: rgba(232,160,69,.07); }
   #gyro-crosshair::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
   #gyro-crosshair::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
-  .gyro-label {
-    position: absolute; font-size: .65rem; color: var(--muted);
-    letter-spacing: .06em; text-transform: uppercase; font-weight: 600;
-  }
+  .gyro-label { position: absolute; font-size: .65rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
   .gyro-label.top    { top: 12px; left: 50%; transform: translateX(-50%); }
   .gyro-label.bottom { bottom: 12px; left: 50%; transform: translateX(-50%); }
   .gyro-label.left   { left: 12px; top: 50%; transform: translateY(-50%); }
   .gyro-label.right  { right: 12px; top: 50%; transform: translateY(-50%); }
-  #gyro-action-hint {
-    position: absolute; bottom: 16px; left: 0; right: 0;
-    text-align: center; font-size: .72rem; color: var(--muted); letter-spacing: .05em;
-  }
+  #gyro-action-hint { position: absolute; bottom: 16px; left: 0; right: 0; text-align: center; font-size: .72rem; color: var(--muted); letter-spacing: .05em; }
 
   /* ── buttons area ── */
-  #buttons-area {
-    width: 100%; flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 10px;
-  }
+  #buttons-area { width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
   #buttons-area.hidden { display: none; }
   .btn-row { display: flex; gap: 10px; align-items: center; }
-  .nav-btn {
-    width: 72px; height: 72px; border-radius: 16px;
-    background: var(--surface); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.6rem; cursor: pointer; transition: all .15s;
-    -webkit-tap-highlight-color: transparent;
-    position: relative; overflow: hidden;
-  }
-  .nav-btn:active, .nav-btn.pressed {
-    background: rgba(0,212,255,.15); border-color: var(--accent);
-    transform: scale(.94); box-shadow: 0 0 20px rgba(0,212,255,.3);
-  }
+  .nav-btn { width: 72px; height: 72px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; cursor: pointer; transition: all .15s; -webkit-tap-highlight-color: transparent; position: relative; overflow: hidden; }
+  .nav-btn:active, .nav-btn.pressed { background: rgba(0,212,255,.15); border-color: var(--accent); transform: scale(.94); box-shadow: 0 0 20px rgba(0,212,255,.3); }
 
   /* ── action buttons ── */
   #action-row { width: 100%; display: flex; gap: 10px; margin-top: 4px; }
-  .action-btn {
-    flex: 1; height: 56px; border-radius: 14px;
-    border: 1px solid var(--border); cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-weight: 700; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase;
-    transition: all .15s; -webkit-tap-highlight-color: transparent;
-  }
+  .action-btn { flex: 1; height: 56px; border-radius: 14px; border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; transition: all .15s; -webkit-tap-highlight-color: transparent; }
   .action-btn:active { transform: scale(.96); }
   #btn-enter  { background: rgba(232,160,69,.1); border-color: rgba(232,160,69,.4); color: var(--amber); }
   #btn-enter:active  { background: rgba(232,160,69,.22); box-shadow: 0 0 18px rgba(232,160,69,.3); }
-  #btn-action { background: rgba(0,255,136,.1);  border-color: rgba(0,255,136,.4);  color: var(--green);  }
+  #btn-action { background: rgba(0,255,136,.1);  border-color: rgba(0,255,136,.4);  color: var(--green); }
   #btn-action:active { background: rgba(0,255,136,.25); box-shadow: 0 0 20px rgba(0,255,136,.3); }
   #btn-back   { flex: .5; background: rgba(255,75,110,.08); border-color: rgba(255,75,110,.3); color: var(--red); font-size: .7rem; }
   #btn-back:active { background: rgba(255,75,110,.2); }
 
   /* ── voice button ── */
-  #btn-voice {
-    flex: .6; background: rgba(168,85,247,.1); border-color: rgba(168,85,247,.4); color: #a855f7;
-    font-size: .7rem; position: relative; overflow: hidden;
-  }
+  #btn-voice { flex: .6; background: rgba(168,85,247,.1); border-color: rgba(168,85,247,.4); color: #a855f7; font-size: .7rem; position: relative; overflow: hidden; }
   #btn-voice:active { background: rgba(168,85,247,.25); box-shadow: 0 0 20px rgba(168,85,247,.3); }
-  #btn-voice.recording {
-    animation: pulse-voice 1s infinite; background: rgba(168,85,247,.4); color: white;
-  }
-  /* estado de éxito: brilla en verde brevemente */
-  #btn-voice.success {
-    background: rgba(0,255,136,.25); border-color: var(--green); color: var(--green);
-    animation: none;
-  }
-  /* estado de error: brilla en rojo */
-  #btn-voice.error {
-    background: rgba(255,75,110,.2); border-color: var(--red); color: var(--red);
-    animation: none;
-  }
+  #btn-voice.recording { animation: pulse-voice 1s infinite; background: rgba(168,85,247,.4); color: white; }
+  #btn-voice.success { background: rgba(0,255,136,.25); border-color: var(--green); color: var(--green); animation: none; }
+  #btn-voice.error   { background: rgba(255,75,110,.2);  border-color: var(--red);   color: var(--red);   animation: none; }
   @keyframes pulse-voice { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-  /* ── toast de confirmación de voz ── */
+  /* ── toast ── */
   #voice-toast {
     position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
     background: rgba(0,255,136,.15); border: 1px solid rgba(0,255,136,.5);
@@ -195,60 +111,34 @@
     pointer-events: none; white-space: nowrap; z-index: 999;
     max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
   }
-  #voice-toast.show {
-    opacity: 1; transform: translateX(-50%) translateY(0);
-  }
-  #voice-toast.error-toast {
-    background: rgba(255,75,110,.15); border-color: rgba(255,75,110,.5); color: var(--red);
-  }
+  #voice-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #voice-toast.error-toast { background: rgba(255,75,110,.15); border-color: rgba(255,75,110,.5); color: var(--red); }
+  #voice-toast.blue-toast  { background: rgba(106,176,232,.15); border-color: rgba(106,176,232,.5); color: var(--blue); }
 
   /* ── gyro permission ── */
-  #gyro-permission {
-    position: absolute; inset: 0; border-radius: 20px;
-    background: rgba(6,10,16,.9);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 12px; z-index: 10;
-  }
+  #gyro-permission { position: absolute; inset: 0; border-radius: 20px; background: rgba(6,10,16,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 10; }
   #gyro-permission p { font-size: .82rem; color: var(--muted); text-align: center; padding: 0 24px; }
-  #grant-btn {
-    background: rgba(232,160,69,.12); border: 1px solid var(--amber);
-    color: var(--amber); border-radius: 10px; padding: 10px 24px;
-    font-weight: 700; font-size: .82rem; letter-spacing: .08em;
-    text-transform: uppercase; cursor: pointer;
-  }
+  #grant-btn { background: rgba(232,160,69,.12); border: 1px solid var(--amber); color: var(--amber); border-radius: 10px; padding: 10px 24px; font-weight: 700; font-size: .82rem; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
   #gyro-permission.hidden { display: none; }
 
   /* ── last command flash ── */
-  #last-cmd {
-    font-family: 'DM Mono', monospace; font-size: .72rem;
-    color: var(--muted); letter-spacing: .1em; text-transform: uppercase;
-    height: 18px; text-align: center; transition: color .1s;
-  }
+  #last-cmd { font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; height: 18px; text-align: center; transition: color .1s; }
   #last-cmd.flash { color: var(--amber); }
 
-  /* ── gyro reset button ── */
-  #gyro-reset {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(232,160,69,.12);
-    border: 1px solid rgba(232,160,69,.3);
-    color: var(--amber);
-    border-radius: 8px;
-    padding: 6px 10px;
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    cursor: pointer;
-    z-index: 5;
-    transition: all .2s;
-    -webkit-tap-highlight-color: transparent;
+  /* ── gyro reset ── */
+  #gyro-reset { position: absolute; top: 12px; right: 12px; background: rgba(232,160,69,.12); border: 1px solid rgba(232,160,69,.3); color: var(--amber); border-radius: 8px; padding: 6px 10px; font-size: .65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; z-index: 5; transition: all .2s; -webkit-tap-highlight-color: transparent; }
+  #gyro-reset:active { background: rgba(232,160,69,.3); transform: scale(0.95); }
+
+  /* ── hint de voz en objetos ── */
+  #obj-voice-hint {
+    width: 100%; background: rgba(106,176,232,.06); border: 1px solid rgba(106,176,232,.2);
+    border-radius: 12px; padding: 10px 14px; display: none;
+    flex-direction: column; gap: 4px;
   }
-  #gyro-reset:active {
-    background: rgba(232,160,69,.3);
-    transform: scale(0.95);
-  }
+  #obj-voice-hint.visible { display: flex; }
+  .hint-title { font-size: .65rem; color: var(--blue); letter-spacing: .08em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+  .hint-examples { font-size: .72rem; color: var(--muted); line-height: 1.6; }
+  .hint-examples span { color: var(--cream); font-style: italic; }
 </style>
 </head>
 <body>
@@ -265,6 +155,16 @@
   <div id="info-panel">
     <div id="panel-section">— Inicio</div>
     <div id="panel-item">Selecciona una sección</div>
+  </div>
+
+  <!-- Hint contextual para sección objetos -->
+  <div id="obj-voice-hint">
+    <div class="hint-title">🎤 Comandos de voz — Objetos</div>
+    <div class="hint-examples">
+      Registrar: <span>«Soy Christian, he dejado las llaves en la cocina»</span><br>
+      Consultar: <span>«¿Dónde están las llaves?»</span><br>
+      Nuevo: <span>«Añadir gafas»</span>
+    </div>
   </div>
 
   <div id="mode-toggle">
@@ -307,14 +207,13 @@
     <div class="action-btn" id="btn-back"   onclick="sendBack()">Atrás</div>
     <div class="action-btn" id="btn-enter"  onclick="sendEnter()">Entrar</div>
     <div class="action-btn" id="btn-action" onclick="sendAction()">Acción</div>
-    <div class="action-btn" id="btn-voice"  onclick="startVoice()">Voz</div>
+    <div class="action-btn" id="btn-voice"  onclick="startVoice()">🎤 Voz</div>
   </div>
 
   <div id="last-cmd">· · ·</div>
 
 </div>
 
-<!-- Toast de confirmación de voz -->
 <div id="voice-toast"></div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -330,74 +229,61 @@
   let currentSection = null;
   let lastNavTime = 0;
 
-  // ── Audio context (Web Audio API — sin dependencias) ────────────────────────
+  // ── Audio ──
   let audioCtx = null;
-
   function getAudioCtx() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     return audioCtx;
   }
-
-  /**
-   * Reproduce un tono sintético.
-   * @param {number} freq        Frecuencia en Hz
-   * @param {number} duration    Duración en segundos
-   * @param {string} type        Tipo de onda: 'sine' | 'square' | 'triangle'
-   * @param {number} gain        Volumen 0-1
-   * @param {number} startDelay  Retardo desde ahora (segundos)
-   */
   function playTone(freq, duration, type = 'sine', gain = 0.35, startDelay = 0) {
     try {
       const ctx = getAudioCtx();
       const osc = ctx.createOscillator();
       const env = ctx.createGain();
-      osc.connect(env);
-      env.connect(ctx.destination);
-
+      osc.connect(env); env.connect(ctx.destination);
       osc.type = type;
       osc.frequency.setValueAtTime(freq, ctx.currentTime + startDelay);
-
       env.gain.setValueAtTime(0, ctx.currentTime + startDelay);
       env.gain.linearRampToValueAtTime(gain, ctx.currentTime + startDelay + 0.01);
       env.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startDelay + duration);
-
       osc.start(ctx.currentTime + startDelay);
       osc.stop(ctx.currentTime + startDelay + duration + 0.05);
-    } catch (e) {
-      console.warn('Audio error:', e);
-    }
+    } catch(e) {}
+  }
+  function playSuccess() { playTone(523, 0.12, 'sine', 0.35, 0); playTone(659, 0.18, 'sine', 0.40, 0.13); }
+  function playError()   { playTone(220, 0.25, 'sine', 0.35, 0); playTone(180, 0.20, 'sine', 0.30, 0.20); }
+  // Sonido especial para "objeto encontrado" — tres notas suaves ascendentes
+  function playLocated() {
+    playTone(440, 0.10, 'sine', 0.3, 0.00);
+    playTone(554, 0.10, 'sine', 0.3, 0.12);
+    playTone(659, 0.20, 'sine', 0.35, 0.24);
   }
 
-  /**
-   * Sonido de ÉXITO: dos notas ascendentes (do-mi)
-   * Suena a "confirmado / tarea guardada"
-   */
-  function playSuccess() {
-    playTone(523, 0.12, 'sine', 0.35, 0.00);   // Do5
-    playTone(659, 0.18, 'sine', 0.40, 0.13);   // Mi5
-  }
-
-  /**
-   * Sonido de ERROR: nota grave descendente
-   */
-  function playError() {
-    playTone(220, 0.25, 'sine', 0.35, 0.00);   // La3 — grave
-    playTone(180, 0.20, 'sine', 0.30, 0.20);   // La3 más bajo
-  }
-
-  // ── Toast ────────────────────────────────────────────────────────────────────
+  // ── Toast ──
   let toastTimer = null;
-
-  function showToast(msg, isError = false) {
+  function showToast(msg, type = 'ok') {
     const el = document.getElementById('voice-toast');
     el.textContent = msg;
-    el.classList.toggle('error-toast', isError);
+    el.classList.remove('error-toast', 'blue-toast');
+    if (type === 'error') el.classList.add('error-toast');
+    if (type === 'blue')  el.classList.add('blue-toast');
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 4000);
   }
 
-  // ── Connection ──────────────────────────────────────────────────────────────
+  // ── Voz TTS: responder por voz ──
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'es-ES';
+    utt.rate = 1.05;
+    utt.pitch = 1.0;
+    window.speechSynthesis.speak(utt);
+  }
+
+  // ── Connection ──
   socket.on('connect', () => {
     document.getElementById('conn-dot').classList.add('on');
     document.getElementById('conn-text').textContent = 'Conectado';
@@ -410,35 +296,27 @@
   socket.on('stateUpdate', updateInfo);
   socket.on('fullState',   updateInfo);
 
-  // ── Confirmación del servidor: tarea guardada con éxito ─────────────────────
+  // ── Eventos de respuesta del servidor ──
+
   socket.on('taskSaved', ({ text }) => {
-    // 1. Sonido de éxito
     playSuccess();
-    // 2. Vibración: patrón de "check" (corto-corto-largo)
     navigator.vibrate && navigator.vibrate([40, 60, 40, 60, 120]);
-    // 3. Toast visual
-    showToast('✓ Tarea guardada: ' + text);
-    // 4. Botón de voz brilla en verde
-    const btn = document.getElementById('btn-voice');
-    btn.classList.remove('recording');
-    btn.classList.add('success');
-    setTimeout(() => btn.classList.remove('success'), 1800);
-    // 5. Flash en last-cmd
+    showToast('✓ ' + text);
+    voiceBtn('success');
     flash('✓ GUARDADO');
   });
 
-  // ── Error al guardar ────────────────────────────────────────────────────────
   socket.on('taskError', () => {
     playError();
     navigator.vibrate && navigator.vibrate([200, 100, 200]);
-    showToast('✗ Error al procesar el comando', true);
+    showToast('✗ Error al procesar el comando', 'error');
     voiceBtn('error');
     flash('✗ ERROR');
   });
 
   socket.on('taskIgnored', () => {
     navigator.vibrate && navigator.vibrate([60, 80, 60]);
-    showToast('⚠ Comando de voz no disponible aquí', true);
+    showToast('⚠ Comando no disponible aquí', 'error');
     voiceBtn(null);
     flash('⚠ NO DISPONIBLE');
   });
@@ -446,17 +324,9 @@
   socket.on('taskDeleted', ({ text }) => {
     playSuccess();
     navigator.vibrate && navigator.vibrate([40, 60, 120]);
-    showToast('🗑 Eliminada: ' + text);
+    showToast('🗑 Eliminado: ' + text);
     voiceBtn('success');
-    flash('🗑 ELIMINADA');
-  });
-
-  socket.on('paymentSaved', ({ name, amount }) => {
-    playSuccess();
-    navigator.vibrate && navigator.vibrate([40, 60, 40, 60, 120]);
-    showToast('✓ Pago añadido: ' + name + ' ' + amount + '€');
-    voiceBtn('success');
-    flash('✓ PAGO AÑADIDO');
+    flash('🗑 ELIMINADO');
   });
 
   socket.on('paymentPaid', ({ name }) => {
@@ -467,13 +337,6 @@
     flash('✓ PAGADO');
   });
 
-  socket.on('voiceUnknown', ({ text }) => {
-    navigator.vibrate && navigator.vibrate([60, 80, 60]);
-    showToast('⚠ No entendí: "' + text + '"', true);
-    voiceBtn(null);
-    flash('⚠ NO ENTENDIDO');
-  });
-
   socket.on('lightToggled', ({ name, on }) => {
     playSuccess();
     navigator.vibrate && navigator.vibrate([40, 60, 120]);
@@ -482,19 +345,59 @@
     flash(on ? '💡 ENCENDIDA' : '🌑 APAGADA');
   });
 
-  socket.on('objectToggled', ({ name, active }) => {
+  // ── NUEVO: objeto registrado ──
+  socket.on('objectLocated', ({ name, location, who }) => {
     playSuccess();
-    navigator.vibrate && navigator.vibrate([40, 60, 120]);
-    showToast((active ? '✅ Activado: ' : '⏹ Desactivado: ') + name);
+    navigator.vibrate && navigator.vibrate([40, 60, 40, 60, 120]);
+    showToast(`📦 ${name} → ${location} (${who})`, 'ok');
     voiceBtn('success');
-    flash(active ? '✅ ACTIVADO' : '⏹ DESACTIVADO');
+    flash('📦 UBICACIÓN GUARDADA');
+  });
+
+  // ── NUEVO: respuesta de consulta de objeto — se lee por voz ──
+  socket.on('objectQuery', ({ found, name, location, who, when }) => {
+    voiceBtn('success');
+    if (!found) {
+      const msg = `No sé dónde están ${name}. Nadie lo ha registrado todavía.`;
+      playError();
+      navigator.vibrate && navigator.vibrate([100, 50, 100]);
+      showToast(`❓ ${name}: sin ubicación`, 'error');
+      speak(msg);
+      flash('❓ SIN UBICACIÓN');
+    } else {
+      const msg = `${name} están en ${location}. Lo dejó ${who} ${when}.`;
+      playLocated();
+      navigator.vibrate && navigator.vibrate([40, 60, 120]);
+      showToast(`📍 ${name} → ${location} · ${who} · ${when}`, 'blue');
+      speak(msg);
+      flash('📍 ENCONTRADO');
+    }
+  });
+
+  // ── NUEVO: error de objeto ──
+  socket.on('objectError', ({ msg }) => {
+    playError();
+    navigator.vibrate && navigator.vibrate([200, 100, 200]);
+    showToast('✗ ' + msg, 'error');
+    voiceBtn('error');
+    flash('✗ ERROR');
+  });
+
+  socket.on('voiceUnknown', ({ text }) => {
+    navigator.vibrate && navigator.vibrate([60, 80, 60]);
+    showToast('⚠ No entendí: "' + text + '"', 'error');
+    voiceBtn(null);
+    flash('⚠ NO ENTENDIDO');
   });
 
   function updateInfo(s) {
-    currentSection = s.activeSection; 
+    currentSection = s.activeSection;
 
-    const sectionNames = { lights:'💡 Luces', tasks:'✅ Tareas', objects:'🏠 Objetos', payments:'💳 Pagos', null:'— Inicio' };
+    const sectionNames = { lights:'💡 Luces', tasks:'✅ Tareas', objects:'📦 Objetos', payments:'💳 Pagos' };
     document.getElementById('panel-section').textContent = sectionNames[s.activeSection] || '— Inicio';
+
+    // Mostrar/ocultar hint de objetos
+    document.getElementById('obj-voice-hint').classList.toggle('visible', s.activeSection === 'objects');
 
     if (!s.activeSection) {
       const names = ['Luces', 'Tareas', 'Objetos', 'Pagos'];
@@ -504,11 +407,19 @@
       const lists   = { lights: s.lights, tasks: s.tasks, objects: s.objects, payments: s.payments };
       const cursors = { lights: s.lightsCursor, tasks: s.tasksCursor, objects: s.objectsCursor, payments: s.paymentsCursor };
       const item    = lists[s.activeSection]?.[cursors[s.activeSection]];
-      if (item) document.getElementById('panel-item').textContent = '▶ ' + (item.name || item.text || '—');
+      if (item) {
+        // Para objetos mostramos nombre + última ubicación si existe
+        if (s.activeSection === 'objects' && item.history && item.history.length > 0) {
+          const last = item.history[item.history.length - 1];
+          document.getElementById('panel-item').textContent = `▶ ${item.name} · 📍 ${last.location}`;
+        } else {
+          document.getElementById('panel-item').textContent = '▶ ' + (item.name || item.text || '—');
+        }
+      }
     }
   }
 
-  // ── Mode switch ──────────────────────────────────────────────────────────────
+  // ── Mode switch ──
   function setMode(m) {
     mode = m;
     document.getElementById('mode-gyro').classList.toggle('active', m === 'gyro');
@@ -517,54 +428,40 @@
     document.getElementById('buttons-area').classList.toggle('hidden', m === 'gyro');
   }
 
-  // ── Gyro ─────────────────────────────────────────────────────────────────────
+  // ── Gyro ──
   function requestGyro() {
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
       DeviceOrientationEvent.requestPermission()
         .then(perm => { if (perm === 'granted') startGyro(); })
         .catch(console.error);
-    } else {
-      startGyro();
-    }
+    } else { startGyro(); }
   }
-
   function startGyro() {
     document.getElementById('gyro-permission').classList.add('hidden');
     gyroActive = true;
     window.addEventListener('deviceorientation', handleOrientation, true);
     window.addEventListener('devicemotion',      handleMotion,      true);
   }
-
   if (typeof DeviceOrientationEvent !== 'undefined') {
     if (typeof DeviceOrientationEvent.requestPermission !== 'function') startGyro();
   }
 
-  let baseGamma = null, baseBeta = null;
-  let calibrating = true;
+  let baseGamma = null, baseBeta = null, calibrating = true;
   setTimeout(() => { calibrating = false; }, 1500);
 
   window.resetGyro = function() {
     calibrating = true;
     flash('🔄 CALIBRANDO...');
-    if (navigator.vibrate) navigator.vibrate(30);
-    
-    // Dejamos 800ms para que capture bien la nueva posición
-    setTimeout(() => { 
-      calibrating = false; 
-      flash('✅ CENTRADO');
-    }, 800);
+    navigator.vibrate && navigator.vibrate(30);
+    setTimeout(() => { calibrating = false; flash('✅ CENTRADO'); }, 800);
   };
 
   function handleOrientation(e) {
     const gamma = e.gamma || 0;
     const beta  = e.beta  || 0;
-
     if (calibrating) { baseGamma = gamma; baseBeta = beta; return; }
-
     const dGamma = gamma - (baseGamma || 0);
     const dBeta  = beta  - (baseBeta  || 0);
-
     const area = document.getElementById('gyro-area');
     const w = area.clientWidth, h = area.clientHeight;
     const bx = Math.max(30, Math.min(w - 30, w/2 + (dGamma / 30) * w/2));
@@ -572,13 +469,9 @@
     const bubble = document.getElementById('gyro-bubble');
     bubble.style.left = (bx - 30) + 'px';
     bubble.style.top  = (by - 30) + 'px';
-
     const now = Date.now();
     if (now - lastDirTime < COOLDOWN_MS) return;
-
-    // ¡NUEVO!: Si hemos agitado el móvil en los últimos 800ms, ignoramos el giroscopio
     if (now - lastShakeTime < 800) return;
-
     let dir = null;
     if (Math.abs(dGamma) > Math.abs(dBeta)) {
       if      (dGamma >  THRESHOLD_DEG) dir = 'right';
@@ -587,50 +480,33 @@
       if      (dBeta  >  THRESHOLD_DEG) dir = 'down';
       else if (dBeta  < -THRESHOLD_DEG) dir = 'up';
     }
-
     if (beta > 70 && now - lastDirTime > 800) {
-      if (currentSection !== null) { // Solo retrocede si estamos dentro de una zona
-        sendBack(); 
-        lastDirTime = now; 
-      }
+      if (currentSection !== null) { sendBack(); lastDirTime = now; }
       return;
     }
-
-    if (dir && dir !== lastDir) {
-      lastDir = dir; navSend(dir); lastDirTime = now;
-    } else if (!dir) {
-      lastDir = null;
-    }
+    if (dir && dir !== lastDir) { lastDir = dir; navSend(dir); lastDirTime = now; }
+    else if (!dir) { lastDir = null; }
   }
 
   function handleMotion(e) {
     const acc = e.accelerationIncludingGravity;
     if (!acc) return;
-    
     const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0);
     const now   = Date.now();
-    
-    // Hemos bajado el umbral de 30 a 25 para que no haya que agitar tan fuerte
     if (total > 40 && now - lastShakeTime > 800) {
       lastShakeTime = now;
-      
-      if (currentSection === null) {
-        sendEnter();
-      } else {
-        sendAction();
-      }
+      if (currentSection === null) sendEnter();
+      else sendAction();
     }
   }
 
-  // ── Send events ──────────────────────────────────────────────────────────────
+  // ── Send events ──
   window.navSend = function(dir) {
     const now = Date.now();
-    // Escudo de 250ms para ignorar los dobles toques "fantasma" de los móviles
     if (now - lastNavTime < 250) return;
     lastNavTime = now;
-    
     socket.emit('navigate', dir);
-    if (navigator.vibrate) navigator.vibrate(15);
+    navigator.vibrate && navigator.vibrate(15);
   };
 
   function sendEnter() {
@@ -642,14 +518,8 @@
   window.sendBack = function() {
     socket.emit('back');
     flash('🔙 ATRÁS');
-    if (navigator.vibrate) navigator.vibrate([30, 50, 30]); // Doble vibración corta
+    navigator.vibrate && navigator.vibrate([30, 50, 30]);
   };
-
-  function sendBack() {
-    socket.emit('back');
-    flash('✕ ATRÁS');
-    navigator.vibrate && navigator.vibrate(40);
-  }
 
   function sendAction() {
     socket.emit('action');
@@ -663,15 +533,7 @@
     el.classList.add('flash');
     setTimeout(() => el.classList.remove('flash'), 400);
   }
-  function flashBtn(id) {
-    const btn = document.getElementById(id);
-    if (!btn) return;
-    btn.classList.add('pressed');
-    setTimeout(() => btn.classList.remove('pressed'), 200);
-  }
 
-  // ── Voice Task ───────────────────────────────────────────────────────────────
-  // Helper: aplica estado visual al botón de voz y lo limpia tras 1.8s
   function voiceBtn(state) {
     const btn = document.getElementById('btn-voice');
     btn.classList.remove('recording', 'success', 'error');
@@ -681,15 +543,14 @@
     }
   }
 
+  // ── Voice Recognition ──
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
   if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
     recognition.lang = 'es-ES';
     recognition.continuous = false;
 
     window.startVoice = function() {
-      // Despierta el AudioContext (requiere gesto del usuario)
       getAudioCtx().resume();
       recognition.start();
       document.getElementById('btn-voice').classList.remove('success', 'error');
@@ -705,8 +566,6 @@
     };
 
     recognition.onend = () => {
-      // El botón solo sale de 'recording' cuando llega taskSaved/taskError
-      // pero si onend se dispara sin resultado, limpiamos igual
       const btn = document.getElementById('btn-voice');
       if (btn.classList.contains('recording')) btn.classList.remove('recording');
     };
@@ -718,7 +577,6 @@
       flash('✗ ERROR DE VOZ');
       console.error(event.error);
     };
-
   } else {
     document.getElementById('btn-voice').style.display = 'none';
   }

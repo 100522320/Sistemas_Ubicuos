@@ -9,7 +9,7 @@
     "name": "Lectura",
     "room": "Salón",
     "icon": "📖",
-    "on": false
+    "on": true
   },
   {
     "name": "Principal",

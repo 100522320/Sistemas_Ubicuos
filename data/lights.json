@@ -3,13 +3,13 @@
     "name": "Techo",
     "room": "Salón",
     "icon": "💡",
-    "on": true
+    "on": false
   },
   {
     "name": "Lectura",
     "room": "Salón",
     "icon": "📖",
-    "on": true
+    "on": false
   },
   {
     "name": "Principal",
@@ -21,6 +21,6 @@
     "name": "Pasillo",
     "room": "Pasillo",
     "icon": "🚪",
-    "on": false
+    "on": true
   }
 ]

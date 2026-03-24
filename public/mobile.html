@@ -129,14 +129,13 @@
   #gyro-reset { position: absolute; top: 12px; right: 12px; background: rgba(232,160,69,.12); border: 1px solid rgba(232,160,69,.3); color: var(--amber); border-radius: 8px; padding: 6px 10px; font-size: .65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; z-index: 5; transition: all .2s; -webkit-tap-highlight-color: transparent; }
   #gyro-reset:active { background: rgba(232,160,69,.3); transform: scale(0.95); }
 
-  /* ── hint de voz en objetos ── */
-  #obj-voice-hint {
-    width: 100%; background: rgba(106,176,232,.06); border: 1px solid rgba(106,176,232,.2);
-    border-radius: 12px; padding: 10px 14px; display: none;
-    flex-direction: column; gap: 4px;
+  /* ── hint de voz contextual ── */
+  #voice-hint-card {
+    width: 100%; border-radius: 12px; padding: 10px 14px; display: none;
+    flex-direction: column; gap: 4px; transition: all 0.3s; border: 1px solid transparent;
   }
-  #obj-voice-hint.visible { display: flex; }
-  .hint-title { font-size: .65rem; color: var(--blue); letter-spacing: .08em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
+  #voice-hint-card.visible { display: flex; }
+  .hint-title { font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; font-family: 'DM Mono', monospace; }
   .hint-examples { font-size: .72rem; color: var(--muted); line-height: 1.6; }
   .hint-examples span { color: var(--cream); font-style: italic; }
 </style>
@@ -157,14 +156,10 @@
     <div id="panel-item">Selecciona una sección</div>
   </div>
 
-  <!-- Hint contextual para sección objetos -->
-  <div id="obj-voice-hint">
-    <div class="hint-title">🎤 Comandos de voz — Objetos</div>
-    <div class="hint-examples">
-      Registrar: <span>«Soy Christian, he dejado las llaves en la cocina»</span><br>
-      Consultar: <span>«¿Dónde están las llaves?»</span><br>
-      Nuevo: <span>«Añadir gafas»</span>
-    </div>
+  <!-- Hint contextual -->
+  <div id="voice-hint-card">
+    <div class="hint-title" id="hint-title">🎤 Comandos</div>
+    <div class="hint-examples" id="hint-examples"></div>
   </div>
 
   <div id="mode-toggle">
@@ -396,9 +391,50 @@
     const sectionNames = { lights:'💡 Luces', tasks:'✅ Tareas', objects:'📦 Objetos', payments:'💳 Pagos' };
     document.getElementById('panel-section').textContent = sectionNames[s.activeSection] || '— Inicio';
 
-    // Mostrar/ocultar hint de objetos
-    document.getElementById('obj-voice-hint').classList.toggle('visible', s.activeSection === 'objects');
+    // Hint dinámico de voz según la sección
+    const hintCard = document.getElementById('voice-hint-card');
+    
+    // Objeto con todos los comandos de voz, incluyendo el menú principal ("main")
+    const hints = {
+      lights: {
+        t: "🎤 Comandos — Luces", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
+        ex: "Encender: <span>«Encender luz del salón»</span><br>Apagar: <span>«Apagar pasillo»</span>"
+      },
+      tasks: {
+        t: "🎤 Comandos — Tareas", c: "var(--green)", bg: "rgba(126,201,138,.06)", bd: "rgba(126,201,138,.2)",
+        ex: "Añadir: <span>«Añadir Adrián comprar pan»</span><br>Borrar: <span>«Borrar Adrián comprar pan»</span>"
+      },
+      objects: {
+        t: "🎤 Comandos — Objetos", c: "var(--blue)", bg: "rgba(106,176,232,.06)", bd: "rgba(106,176,232,.2)",
+        ex: "Registrar: <span>«Soy [Tu nombre], He dejado los zapatos en la cocina»</span><br>Consultar: <span>«¿Dónde están las llaves?»</span><br>Nuevo: <span>«Añadir gafas»</span>"
+      },
+      payments: {
+        t: "🎤 Comandos — Pagos", c: "var(--red)", bg: "rgba(224,96,96,.06)", bd: "rgba(224,96,96,.2)",
+        ex: "Añadir: <span>«Añadir Netflix 14 con 99 euros»</span><br>Pagar: <span>«Netflix pagado»</span><br>Pendiente: <span>«Netflix pendiente»</span><br>Borrar: <span>«Borrar Netflix»</span>"
+      },
+      main: {
+        t: "🎤 Comandos — Inicio", c: "var(--cream)", bg: "rgba(240,230,208,.06)", bd: "rgba(240,230,208,.2)",
+        ex: "Navegar: <span>«Luces»</span>, <span>«Tareas»,...</span><br>Global: <span>«¿Dónde están las llaves?»</span>"
+      }
+    };
+    
+    // Si no hay una sección activa, cargamos la de "main" (Menú Principal)
+    const sectionKey = s.activeSection || 'main';
+    const h = hints[sectionKey];
+    
+    // Mostramos los textos de ejemplo de voz y aplicamos los colores de la sección
+    if (h) {
+      hintCard.style.background = h.bg;
+      hintCard.style.borderColor = h.bd;
+      document.getElementById('hint-title').style.color = h.c;
+      document.getElementById('hint-title').textContent = h.t;
+      document.getElementById('hint-examples').innerHTML = h.ex;
+      hintCard.classList.add('visible');
+    } else {
+      hintCard.classList.remove('visible');
+    }
 
+    // Actualización del panel inferior
     if (!s.activeSection) {
       const names = ['Luces', 'Tareas', 'Objetos', 'Pagos'];
       const idx   = s.cursor.y * 2 + s.cursor.x;
@@ -408,7 +444,6 @@
       const cursors = { lights: s.lightsCursor, tasks: s.tasksCursor, objects: s.objectsCursor, payments: s.paymentsCursor };
       const item    = lists[s.activeSection]?.[cursors[s.activeSection]];
       if (item) {
-        // Para objetos mostramos nombre + última ubicación si existe
         if (s.activeSection === 'objects' && item.history && item.history.length > 0) {
           const last = item.history[item.history.length - 1];
           document.getElementById('panel-item').textContent = `▶ ${item.name} · 📍 ${last.location}`;

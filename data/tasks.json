@@ -64,7 +64,7 @@
     "id": "1773770679531",
     "title": "pan",
     "assignee": "Cristian",
-    "done": false
+    "done": true
   },
   {
     "id": "1773770687618",
@@ -76,6 +76,30 @@
     "id": "1773770926834",
     "title": "coche",
     "assignee": "Cristian",
+    "done": false
+  },
+  {
+    "id": "1774368557636",
+    "title": "camión",
+    "assignee": "Cristian",
+    "done": false
+  },
+  {
+    "id": "1774368564186",
+    "title": "camión",
+    "assignee": "Casa",
+    "done": false
+  },
+  {
+    "id": "1774368609653",
+    "title": "pan",
+    "assignee": "Lucía",
+    "done": true
+  },
+  {
+    "id": "1774370483683",
+    "title": "Z5",
+    "assignee": "Móvil",
     "done": false
   }
 ]

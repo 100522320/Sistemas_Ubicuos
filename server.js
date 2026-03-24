@@ -112,9 +112,6 @@ let state = {
   tasks:    loadJSON('tasks')
 };
 
-// ── USUARIOS VÁLIDOS ──
-const VALID_USERS = ['christian', 'adrian'];
-
 // ── GRID CONFIG ──
 const GRID_W = 2, GRID_H = 2;
 
@@ -123,7 +120,7 @@ const GRID_W = 2, GRID_H = 2;
 function handleObjectVoice(socket, t, tNorm) {
   const IS_QUERY = /(donde|dond|busca|buscar|ves|estas|esta|encuentr|sabe|quien|quién|cuand)/;
 
-  // 1. CONSULTA: "¿dónde están las llaves?"
+  // 1. CONSULTA E HISTORIAL: "¿dónde están las llaves?"
   if (IS_QUERY.test(tNorm)) {
     let found = null;
     for (const obj of state.objects) {
@@ -151,13 +148,13 @@ function handleObjectVoice(socket, t, tNorm) {
     return true;
   }
 
-  // 2. REGISTRO: "Soy Christian, he dejado las llaves en la cocina"
+  // 2. REGISTRO GLOBAL: Permite a CUALQUIER persona registrar movimientos
   let whoName = null, objName = null, location = null;
 
   const matchSoy = tNorm.match(/(?:soy|me llamo)\s+(\w+)/);
   const matchDej = tNorm.match(/(?:he?\s+)?(?:dejado|puesto|guardado|colocado|dejo|pongo|puse)\s+(?:el |la |los |las |un |una )?(.+?)\s+en\s+(.+)/);
   if (matchSoy && matchDej) {
-    whoName  = matchSoy[1].charAt(0).toUpperCase() + matchSoy[1].slice(1);
+    whoName  = matchSoy[1];
     objName  = matchDej[1].trim();
     location = matchDej[2].trim();
   }
@@ -165,31 +162,24 @@ function handleObjectVoice(socket, t, tNorm) {
   if (!whoName) {
     const matchTerc = tNorm.match(/(\w+)\s+ha\s+(?:dejado|puesto|guardado|colocado)\s+(?:el |la |los |las |un |una )?(.+?)\s+en\s+(.+)/);
     if (matchTerc) {
-      whoName  = matchTerc[1].charAt(0).toUpperCase() + matchTerc[1].slice(1);
+      whoName  = matchTerc[1];
       objName  = matchTerc[2].trim();
       location = matchTerc[3].trim();
     }
   }
 
   if (!whoName) {
-    for (const user of VALID_USERS) {
-      if (tNorm.startsWith(norm(user))) {
-        whoName = user.charAt(0).toUpperCase() + user.slice(1);
-        const rest = tNorm.slice(norm(user).length).trim();
-        const m = rest.match(/(?:he?\s+)?(?:dejado|puesto|guardado|colocado|dejo|pongo|puse)\s+(?:el |la |los |las |un |una )?(.+?)\s+en\s+(.+)/);
-        if (m) { objName = m[1].trim(); location = m[2].trim(); }
-        break;
-      }
+    const matchCualquiera = tNorm.match(/^(\w+)\s+(?:he?\s+)?(?:dejado|puesto|guardado|colocado|dejo|pongo|puse)\s+(?:el |la |los |las |un |una )?(.+?)\s+en\s+(.+)/);
+    if (matchCualquiera) {
+      whoName = matchCualquiera[1];
+      objName = matchCualquiera[2].trim();
+      location = matchCualquiera[3].trim();
     }
   }
 
   if (whoName && objName && location) {
-    const validUser = VALID_USERS.find(u => norm(u) === norm(whoName));
-    if (!validUser) {
-      socket.emit('objectError', { msg: `Usuario "${whoName}" no reconocido` });
-      return true;
-    }
-    whoName = validUser.charAt(0).toUpperCase() + validUser.slice(1);
+    // Formateamos el nombre (Ej: maria -> Maria)
+    whoName = whoName.charAt(0).toUpperCase() + whoName.slice(1);
 
     let targetObj = null, targetIdx = -1;
     for (let i = 0; i < state.objects.length; i++) {
@@ -197,6 +187,7 @@ function handleObjectVoice(socket, t, tNorm) {
         targetObj = state.objects[i]; targetIdx = i; break;
       }
     }
+    
     if (!targetObj) {
       const newObj = { id: Date.now(), name: objName.charAt(0).toUpperCase() + objName.slice(1),  history: [] };
       state.objects.push(newObj);
@@ -204,12 +195,14 @@ function handleObjectVoice(socket, t, tNorm) {
       targetIdx = state.objects.length - 1;
     }
 
+    // Se EMPUJA (push) la nueva localización, manteniendo todo el historial anterior
     const entry = {
       location: location.charAt(0).toUpperCase() + location.slice(1),
       who:      whoName,
       when:     new Date().toISOString()
     };
     targetObj.history.push(entry);
+    
     state.objectsCursor = targetIdx;
     saveObjects();
     io.emit('stateUpdate', state);
@@ -510,10 +503,19 @@ io.on('connection', socket => {
         else { nameWords = wordsArray.slice(0, i + 1); break; }
       }
       if (nameWords.length > 0 && amountWords.length > 0) {
-        const name       = nameWords.join(' ');
-        let amountStr    = amountWords.join(' ').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[,']/g, '.');
-        let digitsOnly   = amountStr.replace(/\s*(?:euros?|€|centimos?)/g, '').trim();
-        let amount       = /^\d+(\.\d+)?$/.test(digitsOnly) ? parseFloat(digitsOnly) : 0;
+        const name = nameWords.join(' ');
+        let amountStr = amountWords.join(' ').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        // 1. Convertir separadores hablados (y comas) a un punto decimal
+        amountStr = amountStr.replace(/\s+(con|coma|punto|y)\s+/g, '.').replace(/,/g, '.');
+        
+        // 2. Eliminar cualquier carácter que no sea un número o un punto
+        let digitsOnly = amountStr.replace(/[^\d.]/g, '');
+        
+        // 3. Convertir a float de forma segura
+        let amount = parseFloat(digitsOnly);
+        if (isNaN(amount)) amount = 0;
+
         const newPayment = { id: Date.now(), name: name.charAt(0).toUpperCase() + name.slice(1), icon: '💳', amount, due: 'Sin fecha', category: 'otros', paid: false };
         state.payments.push(newPayment);
         state.paymentsCursor = state.payments.length - 1;

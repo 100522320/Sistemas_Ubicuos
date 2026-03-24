@@ -3,7 +3,7 @@
     "name": "Techo",
     "room": "Salón",
     "icon": "💡",
-    "on": false
+    "on": true
   },
   {
     "name": "Lectura",

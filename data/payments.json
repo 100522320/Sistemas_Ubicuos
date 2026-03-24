@@ -1,14 +1,5 @@
 [
   {
-    "id": 1773770761864,
-    "name": "Coche",
-    "icon": "💳",
-    "amount": 50,
-    "due": "Sin fecha",
-    "category": "otros",
-    "paid": true
-  },
-  {
     "id": 1773770769133,
     "name": "Furgoneta",
     "icon": "💳",
@@ -24,7 +15,7 @@
     "amount": 5,
     "due": "Sin fecha",
     "category": "otros",
-    "paid": false
+    "paid": true
   },
   {
     "id": 1773771464458,
@@ -40,6 +31,60 @@
     "name": "Nuevos",
     "icon": "💳",
     "amount": 62,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1774368645032,
+    "name": "Casa",
+    "icon": "💳",
+    "amount": 47.39,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1774370552400,
+    "name": "Pago",
+    "icon": "💳",
+    "amount": 0,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1774370558337,
+    "name": "S treinta y cinco euros",
+    "icon": "💳",
+    "amount": 0,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1774370577077,
+    "name": "Coche",
+    "icon": "💳",
+    "amount": 0,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1774370980134,
+    "name": "Vehículo",
+    "icon": "💳",
+    "amount": 37.59,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1774371005735,
+    "name": "Caravana",
+    "icon": "💳",
+    "amount": 39.57,
     "due": "Sin fecha",
     "category": "otros",
     "paid": false

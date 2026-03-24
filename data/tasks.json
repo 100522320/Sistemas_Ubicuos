@@ -91,12 +91,6 @@
     "done": false
   },
   {
-    "id": "1774368609653",
-    "title": "pan",
-    "assignee": "Lucía",
-    "done": true
-  },
-  {
     "id": "1774370483683",
     "title": "Z5",
     "assignee": "Móvil",
@@ -106,6 +100,12 @@
     "id": "1774372322639",
     "title": "comprar pan",
     "assignee": "Cristian",
+    "done": false
+  },
+  {
+    "id": "1774373549219",
+    "title": "correr",
+    "assignee": "Adrián",
     "done": false
   }
 ]

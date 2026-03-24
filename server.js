@@ -80,6 +80,17 @@ app.post('/api/tasks', async (req, res) => {
   newTask.assignee = newTask.assignee || 'Casa';
   tasks.push(newTask);
   await writeTasks(tasks);
+
+  // Actualizar el estado global y mover el puntero a la nueva tarea
+  state.tasks = tasks.map(t => ({ 
+    id: t.id, 
+    person: t.assignee || 'Casa', 
+    title: t.title, 
+    done: t.done || false 
+  }));
+  state.tasksCursor = state.tasks.length - 1;
+  io.emit('stateUpdate', state);
+
   res.status(201).json(newTask);
 });
 

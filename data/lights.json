@@ -1,26 +1,20 @@
 [
   {
-    "name": "Techo",
-    "room": "Salón",
+    "name": "Luz habitación",
+    "room": "General",
+    "icon": "💡",
+    "on": true
+  },
+  {
+    "name": "Luz salón",
+    "room": "General",
     "icon": "💡",
     "on": false
   },
   {
-    "name": "Lectura",
-    "room": "Salón",
-    "icon": "📖",
+    "name": "Luz cocina",
+    "room": "General",
+    "icon": "💡",
     "on": false
-  },
-  {
-    "name": "Principal",
-    "room": "Cocina",
-    "icon": "🍳",
-    "on": true
-  },
-  {
-    "name": "Pasillo",
-    "room": "Pasillo",
-    "icon": "🚪",
-    "on": true
   }
 ]

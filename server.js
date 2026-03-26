@@ -539,28 +539,79 @@ io.on('connection', socket => {
 
     // ── SECCIÓN: LUCES ──
     if (state.activeSection === 'lights') {
+      const words = text.trim().split(/\s+/);
+      const actionWord = norm(words[0]);
+
+      // 1. Añadir nueva luz
+      if (/^(anadir|anade|crear|crea|agregar|agrega|nueva|nuevo)$/.test(actionWord)) {
+        const name = words.slice(1).join(' ').trim();
+        if (!name) { socket.emit('voiceUnknown', { text }); return; }
+        
+        const newLight = {
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          room: "General",
+          icon: "💡",
+          on: false
+        };
+        state.lights.push(newLight);
+        state.lightsCursor = state.lights.length - 1;
+        saveLights();
+        io.emit('stateUpdate', state);
+        socket.emit('taskSaved', { text: `Luz añadida: ${newLight.name}` });
+        return;
+      }
+
+      // 2. Eliminar luz
+      if (/^(eliminar|borrar|quitar|borra|elimina)$/.test(actionWord)) {
+        const targetName = words.slice(1).join(' ').trim();
+        
+        // Si no dice nombre de luz a borrar, no hacemos nada (mostramos que no se entendió)
+        if (!targetName) {
+          socket.emit('voiceUnknown', { text });
+          return;
+        }
+
+        // Si dice nombre, lo busca y lo borra
+        const idx = state.lights.findIndex(l => norm(l.name).includes(norm(targetName)) || norm(targetName).includes(norm(l.name)));
+        if (idx !== -1) {
+          const removed = state.lights.splice(idx, 1)[0];
+          state.lightsCursor = Math.max(0, Math.min(state.lightsCursor, state.lights.length - 1));
+          saveLights(); 
+          io.emit('stateUpdate', state);
+          socket.emit('taskDeleted', { text: removed.name });
+        } else { 
+          // Si no encuentra la luz que se ha pedido borrar, no hace nada
+          socket.emit('voiceUnknown', { text }); 
+        }
+        return;
+      }
+
+      // 3. Encender / Apagar
       const TOGGLE_OFF = /apag|desactiv|apagar|desactivar/;
       const TOGGLE_ON  = /encend|activ|encender|activar/;
       let targetLight = null, targetIdx = -1;
+      
       for (let i = 0; i < state.lights.length; i++) {
         if (tNorm.includes(norm(state.lights[i].name)) || tNorm.includes(norm(state.lights[i].room))) {
           targetLight = state.lights[i]; targetIdx = i; break;
         }
       }
+      
+      // SOLO actúa si ha encontrado una coincidencia exacta de luz
       if (targetLight) {
         if (TOGGLE_OFF.test(t)) targetLight.on = false;
         else if (TOGGLE_ON.test(t)) targetLight.on = true;
         else { socket.emit('voiceUnknown', { text }); return; }
-        state.lightsCursor = targetIdx; saveLights(); io.emit('stateUpdate', state);
-        socket.emit('lightToggled', { name: targetLight.name, on: targetLight.on }); return;
+        
+        state.lightsCursor = targetIdx; 
+        saveLights(); 
+        io.emit('stateUpdate', state);
+        socket.emit('lightToggled', { name: targetLight.name, on: targetLight.on }); 
+        return;
       } else {
-        const l = state.lights[state.lightsCursor];
-        if (!l) { socket.emit('taskError'); return; }
-        if (TOGGLE_OFF.test(t)) l.on = false;
-        else if (TOGGLE_ON.test(t)) l.on = true;
-        else { socket.emit('voiceUnknown', { text }); return; }
-        saveLights(); io.emit('stateUpdate', state);
-        socket.emit('lightToggled', { name: l.name, on: l.on }); return;
+        // Si el comando es de encender/apagar pero no ha entendido la luz, NO hace nada (ni usa el cursor)
+        socket.emit('voiceUnknown', { text }); 
+        return;
       }
     }
 

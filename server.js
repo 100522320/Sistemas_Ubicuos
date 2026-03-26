@@ -366,18 +366,27 @@ io.on('connection', socket => {
       return;
     }
 
-    // ── SECCIÓN: OBJETOS (LOCALIZADOR) ──
+    // ── SECCIÓN: OBJETOS ──
     if (state.activeSection === 'objects') {
 
       // Delega en la función compartida; si devuelve true, el comando fue procesado
       if (handleObjectVoice(socket, t, tNorm)) return;
 
-      // 3. AÑADIR objeto vacío: "añadir X" / "nuevo objeto X"
+      //  AÑADIR objeto vacío: "añadir X" / "nuevo objeto X"
       const words      = tNorm.split(/\s+/);
       const actionWord = words[0];
       if (/^(anadir|anade|crear|crea|nuevo|nueva|agregar)$/.test(actionWord)) {
         const name = words.slice(1).join(' ').trim();
         if (!name) { socket.emit('voiceUnknown', { text }); return; }
+
+        const existeObjeto = state.objects.some(o => norm(o.name) === name);
+
+        if (existeObjeto) {
+          // Si ya existe, enviamos un aviso al móvil y cancelamos la creación
+          socket.emit('taskIgnored', { text: `Ya existe un objeto llamado ${name}` });
+          return; 
+        }
+
         const newObj = {
           id:      Date.now(),
           name:    name.charAt(0).toUpperCase() + name.slice(1),
@@ -391,7 +400,7 @@ io.on('connection', socket => {
         return;
       }
 
-      // 4. BORRAR objeto: "borrar X"
+      //  BORRAR objeto: "borrar X"
       if (/^(eliminar|borrar|quitar|borra|elimina)$/.test(actionWord)) {
         const targetName = words.slice(1).join(' ').trim();
         if (!targetName) {
@@ -538,6 +547,15 @@ io.on('connection', socket => {
         const name = words.slice(1).join(' ').trim();
         if (!name) { socket.emit('voiceUnknown', { text }); return; }
         
+        const nameNorm = norm(name);
+        const existeLuz = state.lights.some(l => norm(l.name) === nameNorm);
+
+        if (existeLuz) {
+          // Si ya existe, enviamos un aviso al móvil y cancelamos
+          socket.emit('taskIgnored', { text: `Ya existe una luz llamada ${name}` });
+          return; 
+        }
+
         const newLight = {
           name: name.charAt(0).toUpperCase() + name.slice(1),
           room: "General",

@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fsSync = require('fs');
 const fs = require('fs').promises;
+const { exec } = require('child_process');
 
 const app = express();
 const server = http.createServer(app);
@@ -29,20 +30,10 @@ const FILES = {
 // Datos predeterminados si los archivos no existen la primera vez
 const defaultData = {
   lights: [
-    { name: "Techo",     room: "Salón",   icon: "💡", on: false },
-    { name: "Lectura",   room: "Salón",   icon: "📖", on: false },
-    { name: "Principal", room: "Cocina",  icon: "🍳", on: true  },
-    { name: "Pasillo",   room: "Pasillo", icon: "🚪", on: false }
+    { name: "luz habitación", room: "Habitación", icon: "💡", on: false }
   ],
-  // Nuevo formato: objetos como localizador con historial
-  objects: [
-    { id: 1, name: "Llaves",    icon: "🔑", history: [] },
-    { id: 2, name: "Mando TV",  icon: "📺", history: [] },
-    { id: 3, name: "Cargador",  icon: "🔋", history: [] }
-  ],
-  payments: [
-    { id: 1, name: "Alquiler", icon: "🏠", amount: 850, due: "Día 1", category: "vivienda", paid: false }
-  ],
+  objects: [],
+  payments: [],
   tasks: []
 };
 
@@ -574,6 +565,13 @@ io.on('connection', socket => {
         // Si dice nombre, lo busca y lo borra
         const idx = state.lights.findIndex(l => norm(l.name).includes(norm(targetName)) || norm(targetName).includes(norm(l.name)));
         if (idx !== -1) {
+          if (norm(state.lights[idx].name).includes("luz habitacion")) {
+            // Enviamos error al móvil (vibrará y dirá que no está disponible)
+            //Esta luz es de prueba para el bluetooth
+            socket.emit('taskIgnored', { text: "Esa luz no se puede borrar" });
+            return;
+          }
+
           const removed = state.lights.splice(idx, 1)[0];
           state.lightsCursor = Math.max(0, Math.min(state.lightsCursor, state.lights.length - 1));
           saveLights(); 
@@ -599,8 +597,13 @@ io.on('connection', socket => {
       
       // SOLO actúa si ha encontrado una coincidencia exacta de luz
       if (targetLight) {
-        if (TOGGLE_OFF.test(t)) targetLight.on = false;
-        else if (TOGGLE_ON.test(t)) targetLight.on = true;
+        
+        if (TOGGLE_OFF.test(t)) {
+            targetLight.on = false;
+        } 
+        else if (TOGGLE_ON.test(t)) {
+            targetLight.on = true;
+        }
         else { socket.emit('voiceUnknown', { text }); return; }
         
         state.lightsCursor = targetIdx; 
@@ -652,8 +655,11 @@ io.on('connection', socket => {
     if (state.activeSection === null) return;
 
     if (state.activeSection === 'lights' && state.lights.length > 0) {
-      state.lights[state.lightsCursor].on = !state.lights[state.lightsCursor].on;
+      const l = state.lights[state.lightsCursor];
+      l.on = !l.on;
       saveLights();
+      // Avisamos al móvil para que envíe el comando Bluetooth
+      io.emit('lightToggled', { name: l.name, on: l.on });
     } else if (state.activeSection === 'objects' && state.objects.length > 0) {
       // En objetos, action emite el historial del objeto seleccionado
       const obj = state.objects[state.objectsCursor];

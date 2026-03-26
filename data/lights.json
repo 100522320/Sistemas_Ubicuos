@@ -1,20 +1,14 @@
 [
   {
-    "name": "Luz habitación",
-    "room": "General",
+    "name": "luz habitación",
+    "room": "Habitación",
     "icon": "💡",
-    "on": true
+    "on": false
   },
   {
     "name": "Luz salón",
     "room": "General",
     "icon": "💡",
-    "on": false
-  },
-  {
-    "name": "Luz cocina",
-    "room": "General",
-    "icon": "💡",
-    "on": false
+    "on": true
   }
 ]

@@ -145,6 +145,11 @@
 
   <div id="mob-header">
     <div class="logo">⌂ MANDO</div>
+
+    <button onclick="connectHueBluetooth()" style="background:rgba(232,160,69,0.1); border:1px solid var(--amber); color:var(--amber); border-radius:8px; padding:4px 10px; font-size:0.7rem; font-weight:bold; cursor:pointer;">
+      🔗 Vincular Luz
+    </button>
+
     <div id="conn-status">
       <div id="conn-dot"></div>
       <span id="conn-text">Conectando...</span>
@@ -223,6 +228,33 @@
   let lastShakeTime = 0;
   let currentSection = null;
   let lastNavTime = 0;
+
+
+  // --- VARIABLES BLUETOOTH HUE ---
+    const HUE_SERVICE_UUID = '932c32bd-0000-47a2-835a-a8d455b859dd';
+    const CHAR_ON_OFF_UUID = '932c32bd-0002-47a2-835a-a8d455b859dd';
+    let hueOnOffChar = null;
+
+    async function connectHueBluetooth() {
+      try {
+        showToast('Buscando luz...', 'blue');
+        const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true, // Aceptamos todo para probar
+        optionalServices: [HUE_SERVICE_UUID]
+      });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(HUE_SERVICE_UUID);
+        hueOnOffChar = await service.getCharacteristic(CHAR_ON_OFF_UUID);
+        
+        showToast('✓ Luz vinculada por Bluetooth');
+        playSuccess();
+      } catch(e) {
+        console.error(e);
+        showToast('✗ Error al vincular Bluetooth', 'error');
+      }
+    }
+  
+
 
   // ── Audio ──
   let audioCtx = null;
@@ -332,12 +364,28 @@
     flash('✓ PAGADO');
   });
 
-  socket.on('lightToggled', ({ name, on }) => {
+  socket.on('lightToggled', async ({ name, on }) => {
     playSuccess();
     navigator.vibrate && navigator.vibrate([40, 60, 120]);
     showToast((on ? '💡 Encendida: ' : '🌑 Apagada: ') + name);
     voiceBtn('success');
     flash(on ? '💡 ENCENDIDA' : '🌑 APAGADA');
+
+    // --- ENVIAR COMANDO BLUETOOTH DESDE EL MÓVIL ---
+    const nombreLuz = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (nombreLuz.includes('luz habitacion')) {
+      if (hueOnOffChar) {
+        try {
+          const val = new Uint8Array([on ? 1 : 0]);
+          await hueOnOffChar.writeValue(val);
+        } catch(e) {
+          console.error('Error enviando BT:', e);
+          showToast('✗ Error enviando comando a la luz', 'error');
+        }
+      } else {
+        showToast('⚠ Luz física no vinculada. Pulsa "Vincular Luz"', 'error');
+      }
+    }
   });
 
   // ── NUEVO: objeto registrado ──

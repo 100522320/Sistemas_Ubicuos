@@ -364,6 +364,53 @@
     flash('✓ PAGADO');
   });
 
+  // Cuando el servidor pide confirmación
+  socket.on('askPaymentConfirmation', ({ name }) => {
+    const msg = `¿Estás seguro que quieres añadir ${name} por 0 euros?`;
+    showToast('❓ Esperando confirmación...', 'blue');
+    flash('❓ CONFIRMA POR VOZ');
+    
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(msg);
+    utt.lang = 'es-ES';
+    utt.rate = 1.05;
+    utt.pitch = 1.0;
+    
+    // Lo más importante: cuando termine de hacer la pregunta, volvemos a encender el micro
+    utt.onend = () => {
+      setTimeout(() => startVoice(), 200); 
+    };
+    window.speechSynthesis.speak(utt);
+  });
+
+  // Si dice que SÍ
+  socket.on('paymentConfirmed', ({ name }) => {
+    const msg = `Pago de ${name} añadido correctamente.`;
+    speak(msg);
+    showToast(`✓ Pago añadido`);
+    playSuccess();
+    flash('✓ PAGO CONFIRMADO');
+  });
+
+  // Si dice que NO o cualquier otra cosa
+  socket.on('paymentCancelled', ({ name }) => {
+    const msg = `Vale, el pago de ${name} no se ha añadido.`;
+    speak(msg);
+    showToast(`❌ Pago cancelado`, 'error');
+    playError();
+    flash('❌ CANCELADO');
+  });
+
+  // Si no dice nada y salta el temporizador
+  socket.on('paymentCancelledTimeout', ({ name }) => {
+    const msg = `Al no recibir confirmación, el pago de ${name} no se ha añadido.`;
+    speak(msg);
+    showToast(`⏳ Tiempo agotado. Pago cancelado`, 'error');
+    playError();
+    flash('⏳ TIEMPO AGOTADO');
+  });
+
   socket.on('lightToggled', async ({ name, on }) => {
     playSuccess();
     navigator.vibrate && navigator.vibrate([40, 60, 120]);

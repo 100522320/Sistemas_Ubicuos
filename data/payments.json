@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": 1774608994176,
+    "name": "Netflix",
+    "icon": "💳",
+    "amount": 14.99,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": true
+  },
+  {
+    "id": 1774610765062,
+    "name": "Coche",
+    "icon": "💳",
+    "amount": 0,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1774610782675,
+    "name": "Camión",
+    "icon": "💳",
+    "amount": 5,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  }
+]

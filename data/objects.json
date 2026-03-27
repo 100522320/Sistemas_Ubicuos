@@ -7,6 +7,22 @@
         "location": "El salon",
         "who": "Christian",
         "when": "2026-03-26T21:56:46.646Z"
+      },
+      {
+        "location": "La cocina",
+        "who": "Tomas",
+        "when": "2026-03-27T10:58:56.507Z"
+      }
+    ]
+  },
+  {
+    "id": 1774609168107,
+    "name": "Lampara",
+    "history": [
+      {
+        "location": "El salon",
+        "who": "Christian",
+        "when": "2026-03-27T10:59:28.107Z"
       }
     ]
   }

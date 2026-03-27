@@ -433,6 +433,26 @@ io.on('connection', socket => {
       const words      = text.trim().split(/\s+/);
       const actionWord = norm(words[0]);
 
+      // --- VERIFICAR SI ESTAMOS ESPERANDO CONFIRMACIÓN ---
+      if (socket.pendingPayment) {
+        const p = socket.pendingPayment;
+        socket.pendingPayment = null; // Lo limpiamos para no preguntar dos veces
+        clearTimeout(socket.pendingPaymentTimer); // Cancelamos el temporizador
+
+        // Si la respuesta contiene algo afirmativo
+        if (/\b(si|sí|claro|por supuesto|ok|vale|añadelo)\b/.test(tNorm)) {
+          state.payments.push(p);
+          state.paymentsCursor = state.payments.length - 1;
+          savePayments(); 
+          io.emit('stateUpdate', state);
+          socket.emit('paymentConfirmed', { name: p.name });
+        } else {
+          // Si dice "no" o cualquier otra cosa
+          socket.emit('paymentCancelled', { name: p.name });
+        }
+        return; // Terminamos aquí para que no lo procese como un comando normal
+      }
+
       if (/^(eliminar|borrar|quitar|borra|elimina)$/.test(actionWord)) {
         const targetNameNorm = norm(words.slice(1).join(' '));
         if (state.payments.length === 0) { socket.emit('taskError'); return; }
@@ -528,6 +548,22 @@ io.on('connection', socket => {
         if (isNaN(amount)) amount = 0;
 
         const newPayment = { id: Date.now(), name: name.charAt(0).toUpperCase() + name.slice(1), icon: '💳', amount, due: 'Sin fecha', category: 'otros', paid: false };
+        
+        // --- SI EL IMPORTE ES 0, PEDIMOS CONFIRMACIÓN ---
+        if (amount === 0) {
+          socket.pendingPayment = newPayment;
+          socket.emit('askPaymentConfirmation', { name: newPayment.name });
+          
+          // Si no responde en 10 segundos, lo cancelamos automáticamente
+          socket.pendingPaymentTimer = setTimeout(() => {
+            if (socket.pendingPayment === newPayment) {
+              socket.pendingPayment = null;
+              socket.emit('paymentCancelledTimeout', { name: newPayment.name });
+            }
+          }, 10000); 
+          return;
+        }
+
         state.payments.push(newPayment);
         state.paymentsCursor = state.payments.length - 1;
         savePayments(); io.emit('stateUpdate', state);

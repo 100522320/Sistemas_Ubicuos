@@ -9,6 +9,6 @@
     "name": "Luz salón",
     "room": "General",
     "icon": "💡",
-    "on": true
+    "on": false
   }
 ]

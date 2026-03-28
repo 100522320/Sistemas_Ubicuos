@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Luz habitación",
+    "category": "light",
+    "icon": "💡",
+    "on": false
+  },
+  {
+    "name": "Luz salón",
+    "category": "light",
+    "icon": "💡",
+    "on": false
+  },
+  {
+    "name": "Persiana salón",
+    "category": "blind",
+    "icon": "🪟",
+    "on": false
+  },
+  {
+    "name": "Persiana cocina",
+    "category": "blind",
+    "icon": "🪟",
+    "on": false
+  },
+  {
+    "name": "Cocina",
+    "category": "other",
+    "icon": "🔌",
+    "on": false
+  },
+  {
+    "name": "Ventilador de techo salón",
+    "category": "fan",
+    "icon": "🌀",
+    "on": false
+  },
+  {
+    "name": "Ventilador cocina",
+    "category": "fan",
+    "icon": "🌀",
+    "on": false
+  },
+  {
+    "name": "Aire habitación",
+    "category": "other",
+    "icon": "🔌",
+    "on": false
+  },
+  {
+    "name": "Aire acondicionado salón",
+    "category": "ac",
+    "icon": "❄️",
+    "on": false
+  },
+  {
+    "name": "Calefacción salón",
+    "category": "heating",
+    "icon": "🌡️",
+    "on": false
+  }
+]

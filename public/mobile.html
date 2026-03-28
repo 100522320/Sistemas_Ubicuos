@@ -411,12 +411,16 @@
     flash('⏳ TIEMPO AGOTADO');
   });
 
-  socket.on('lightToggled', async ({ name, on }) => {
+  socket.on('applianceToggled', async ({ name, on }) => {
     playSuccess();
     navigator.vibrate && navigator.vibrate([40, 60, 120]);
-    showToast((on ? '💡 Encendida: ' : '🌑 Apagada: ') + name);
+    // Comprobar si es algo que sube/baja (persiana/toldo) o enciende/apaga
+    const isBlind = /(persiana|estor|toldo)/i.test(name);
+    const actionText = isBlind ? (on ? '🔼 Subiendo: ' : '🔽 Bajando: ') : (on ? '💡 Encendido: ' : '🌑 Apagado: ');
+    
+    showToast(actionText + name);
     voiceBtn('success');
-    flash(on ? '💡 ENCENDIDA' : '🌑 APAGADA');
+    flash(on ? '⚡ ACTIVADO' : '🌑 DESACTIVADO');
 
     // --- ENVIAR COMANDO BLUETOOTH DESDE EL MÓVIL ---
     const nombreLuz = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -427,7 +431,7 @@
           await hueOnOffChar.writeValue(val);
         } catch(e) {
           console.error('Error enviando BT:', e);
-          showToast('✗ Error enviando comando a la luz', 'error');
+          showToast('✗ Error enviando comando físico', 'error');
         }
       } else {
         showToast('⚠ Luz física no vinculada. Pulsa "Vincular Luz"', 'error');
@@ -483,7 +487,7 @@
   function updateInfo(s) {
     currentSection = s.activeSection;
 
-    const sectionNames = { lights:'💡 Luces', tasks:'✅ Tareas', objects:'📦 Objetos', payments:'💳 Pagos' };
+    const sectionNames = { appliances:'🔌 Dispositivos', tasks:'✅ Tareas', objects:'📦 Objetos', payments:'💳 Pagos' };
     document.getElementById('panel-section').textContent = sectionNames[s.activeSection] || '— Inicio';
 
     // Hint dinámico de voz según la sección
@@ -491,9 +495,9 @@
     
     // Objeto con todos los comandos de voz, incluyendo el menú principal ("main")
     const hints = {
-      lights: {
-        t: "🎤 Comandos — Luces", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
-        ex: "Encender: <span>«Encender luz del salón»</span><br>Apagar: <span>«Apagar pasillo»</span><br>Añadir: <span>«Añadir luz terraza»</span><br>Borrar: <span>«Borrar luz terraza»</span>"
+      appliances: {
+        t: "🎤 Comandos — Dispositivos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
+        ex: "Encender/Subir: <span>«Encender luz» / «Subir persiana salón»</span><br>Apagar/Bajar: <span>«Apagar aire» / «Bajar toldo»</span><br>Añadir: <span>«Añadir aire acondicionado»</span><br>Borrar: <span>«Borrar luz terraza»</span>"
       },
       tasks: {
         t: "🎤 Comandos — Tareas", c: "var(--green)", bg: "rgba(126,201,138,.06)", bd: "rgba(126,201,138,.2)",
@@ -509,7 +513,7 @@
       },
       main: {
         t: "🎤 Comandos — Inicio", c: "var(--cream)", bg: "rgba(240,230,208,.06)", bd: "rgba(240,230,208,.2)",
-        ex: "Navegar: <span>«Luces»</span>, <span>«Tareas»,...</span><br>Global: <span>«¿Dónde están las llaves?»</span>"
+        ex: "Navegar: <span>Dispositivos</span>, <span>«Tareas»,...</span><br>Global: <span>«¿Dónde están las llaves?»</span>"
       }
     };
     
@@ -531,12 +535,12 @@
 
     // Actualización del panel inferior
     if (!s.activeSection) {
-      const names = ['Luces', 'Tareas', 'Objetos', 'Pagos'];
+      const names = ['Dispositivos', 'Tareas', 'Objetos', 'Pagos'];
       const idx   = s.cursor.y * 2 + s.cursor.x;
       document.getElementById('panel-item').textContent = '▶ ' + names[idx];
     } else {
-      const lists   = { lights: s.lights, tasks: s.tasks, objects: s.objects, payments: s.payments };
-      const cursors = { lights: s.lightsCursor, tasks: s.tasksCursor, objects: s.objectsCursor, payments: s.paymentsCursor };
+      const lists   = { appliances: s.appliances, tasks: s.tasks, objects: s.objects, payments: s.payments };
+      const cursors = { appliances: s.appliancesCursor, tasks: s.tasksCursor, objects: s.objectsCursor, payments: s.paymentsCursor };
       const item    = lists[s.activeSection]?.[cursors[s.activeSection]];
       if (item) {
         if (s.activeSection === 'objects' && item.history && item.history.length > 0) {

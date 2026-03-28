@@ -21,7 +21,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 if (!fsSync.existsSync(DATA_DIR)) fsSync.mkdirSync(DATA_DIR);
 
 const FILES = {
-  lights:   path.join(DATA_DIR, 'lights.json'),
+  appliances: path.join(DATA_DIR, 'appliances.json'),
   objects:  path.join(DATA_DIR, 'objects.json'),
   payments: path.join(DATA_DIR, 'payments.json'),
   tasks:    path.join(DATA_DIR, 'tasks.json')
@@ -29,8 +29,9 @@ const FILES = {
 
 // Datos predeterminados si los archivos no existen la primera vez
 const defaultData = {
-  lights: [
-    { name: "luz habitación", room: "Habitación", icon: "💡", on: false }
+  appliances: [ 
+    { name: "Luz habitación", category: "light", icon: "💡", on: false },
+    { name: "Persiana salón", category: "blind", icon: "🪟", on: false }
   ],
   objects: [],
   payments: [],
@@ -47,7 +48,7 @@ function loadJSON(key) {
 }
 
 // Funciones para guardar CADA zona en su propio archivo al instante
-function saveLights()   { fsSync.writeFileSync(FILES.lights,   JSON.stringify(state.lights,   null, 2), 'utf8'); }
+function saveAppliances() { fsSync.writeFileSync(FILES.appliances, JSON.stringify(state.appliances, null, 2), 'utf8'); }
 function saveObjects()  { fsSync.writeFileSync(FILES.objects,  JSON.stringify(state.objects,  null, 2), 'utf8'); }
 function savePayments() { fsSync.writeFileSync(FILES.payments, JSON.stringify(state.payments, null, 2), 'utf8'); }
 
@@ -107,8 +108,8 @@ app.delete('/api/tasks/:id', async (req, res) => {
 let state = {
   activeSection: null,
   cursor: { x: 0, y: 0 },
-  lightsCursor: 0, tasksCursor: 0, objectsCursor: 0, paymentsCursor: 0,
-  lights:   loadJSON('lights'),
+  appliancesCursor: 0, tasksCursor: 0, objectsCursor: 0, paymentsCursor: 0,
+  appliances: loadJSON('appliances'), 
   objects:  loadJSON('objects'),
   payments: loadJSON('payments'),
   tasks:    loadJSON('tasks')
@@ -271,9 +272,38 @@ io.on('connection', socket => {
           r = Math.min(r, cols[c].length - 1);
           cur = cols[c][r];
 
+        } else if (listKey === 'appliances') {
+          // ── LÓGICA PARA ELECTRODOMÉSTICOS ──
+          // Agrupamos los dispositivos en "filas" según su categoría
+          const cats = ['light', 'blind', 'heating', 'ac', 'fan', 'other'];
+          const rows = cats.map(c => {
+            let indices = [];
+            list.forEach((item, i) => { if (item.category === c) indices.push(i); });
+            return indices;
+          }).filter(r => r.length > 0); // Omitir categorías que estén vacías
+
+          if (rows.length > 0) {
+            let cIdx = 0, rIdx = 0;
+            // Buscar en qué fila (categoría) y columna está el cursor actualmente
+            for (let i = 0; i < rows.length; i++) {
+              const pos = rows[i].indexOf(cur);
+              if (pos !== -1) { rIdx = i; cIdx = pos; break; }
+            }
+
+            // Movimientos del joystick
+            if (dir === 'left')  cIdx = Math.max(0, cIdx - 1);
+            if (dir === 'right') cIdx = Math.min(rows[rIdx].length - 1, cIdx + 1);
+            if (dir === 'up')    rIdx = Math.max(0, rIdx - 1);
+            if (dir === 'down')  rIdx = Math.min(rows.length - 1, rIdx + 1);
+
+            // Si bajas de una fila larga a una fila más corta, ajustar el cursor
+            cIdx = Math.min(cIdx, rows[rIdx].length - 1);
+            cur = rows[rIdx][cIdx];
+          }
+
         } else {
+          // ── OBJETOS Y PAGOS ──
           let numCols = 1;
-          if (listKey === 'lights')   numCols = 4;
           if (listKey === 'objects')  numCols = 3;
           if (listKey === 'payments') numCols = 2;
 
@@ -573,108 +603,82 @@ io.on('connection', socket => {
       socket.emit('voiceUnknown', { text }); return;
     }
 
-    // ── SECCIÓN: LUCES ──
-    if (state.activeSection === 'lights') {
+    // ── SECCIÓN: ELECTRODOMÉSTICOS ──
+    if (state.activeSection === 'appliances') {
       const words = text.trim().split(/\s+/);
       const actionWord = norm(words[0]);
 
-      // 1. Añadir nueva luz
+      // Función para detectar la categoría por la palabra clave
+      const getCatInfo = (txt) => {
+        if (/(persiana|estor|toldo)/.test(txt)) return { cat: 'blind', icon: '🪟' };
+        if (/(calefaccion|radiador|estufa)/.test(txt)) return { cat: 'heating', icon: '🌡️' };
+        if (/(aire acondicionado|climatizador)/.test(txt)) return { cat: 'ac', icon: '❄️' };
+        if (/(ventilador|techo)/.test(txt)) return { cat: 'fan', icon: '🌀' };
+        if (/(luz|luces|lampara|foco)/.test(txt)) return { cat: 'light', icon: '💡' };
+        return { cat: 'other', icon: '🔌' };
+      };
+
+      // 1. Añadir
       if (/^(anadir|anade|crear|crea|agregar|agrega|nueva|nuevo)$/.test(actionWord)) {
         const name = words.slice(1).join(' ').trim();
         if (!name) { socket.emit('voiceUnknown', { text }); return; }
         
-        const nameNorm = norm(name);
-        const existeLuz = state.lights.some(l => norm(l.name) === nameNorm);
+        const info = getCatInfo(norm(name));
+        const existe = state.appliances.some(a => norm(a.name) === norm(name));
+        if (existe) { socket.emit('taskIgnored', { text: `Ya existe: ${name}` }); return; }
 
-        if (existeLuz) {
-          // Si ya existe, enviamos un aviso al móvil y cancelamos
-          socket.emit('taskIgnored', { text: `Ya existe una luz llamada ${name}` });
-          return; 
-        }
-
-        const newLight = {
-          name: name.charAt(0).toUpperCase() + name.slice(1),
-          room: "General",
-          icon: "💡",
-          on: false
-        };
-        state.lights.push(newLight);
-        state.lightsCursor = state.lights.length - 1;
-        saveLights();
-        io.emit('stateUpdate', state);
-        socket.emit('taskSaved', { text: `Luz añadida: ${newLight.name}` });
+        const newApp = { name: name.charAt(0).toUpperCase() + name.slice(1), category: info.cat, icon: info.icon, on: false };
+        state.appliances.push(newApp);
+        state.appliancesCursor = state.appliances.length - 1;
+        saveAppliances(); io.emit('stateUpdate', state);
+        socket.emit('taskSaved', { text: `Añadido: ${newApp.name}` });
         return;
       }
 
-      // 2. Eliminar luz
+      // 2. Eliminar
       if (/^(eliminar|borrar|quitar|borra|elimina)$/.test(actionWord)) {
         const targetName = words.slice(1).join(' ').trim();
-        
-        // Si no dice nombre de luz a borrar, no hacemos nada (mostramos que no se entendió)
-        if (!targetName) {
-          socket.emit('voiceUnknown', { text });
-          return;
-        }
+        if (!targetName) { socket.emit('voiceUnknown', { text }); return; }
 
-        // Si dice nombre, lo busca y lo borra
-        const idx = state.lights.findIndex(l => norm(l.name).includes(norm(targetName)) || norm(targetName).includes(norm(l.name)));
+        const idx = state.appliances.findIndex(a => norm(a.name).includes(norm(targetName)) || norm(targetName).includes(norm(a.name)));
         if (idx !== -1) {
-          if (norm(state.lights[idx].name).includes("luz habitacion")) {
-            // Enviamos error al móvil (vibrará y dirá que no está disponible)
-            //Esta luz es de prueba para el bluetooth
-            socket.emit('taskIgnored', { text: "Esa luz no se puede borrar" });
-            return;
+          if (norm(state.appliances[idx].name).includes("luz habitacion")) {
+            socket.emit('taskIgnored', { text: "Ese dispositivo no se puede borrar" }); return;
           }
-
-          const removed = state.lights.splice(idx, 1)[0];
-          state.lightsCursor = Math.max(0, Math.min(state.lightsCursor, state.lights.length - 1));
-          saveLights(); 
-          io.emit('stateUpdate', state);
+          const removed = state.appliances.splice(idx, 1)[0];
+          state.appliancesCursor = Math.max(0, Math.min(state.appliancesCursor, state.appliances.length - 1));
+          saveAppliances(); io.emit('stateUpdate', state);
           socket.emit('taskDeleted', { text: removed.name });
-        } else { 
-          // Si no encuentra la luz que se ha pedido borrar, no hace nada
-          socket.emit('voiceUnknown', { text }); 
-        }
+        } else { socket.emit('voiceUnknown', { text }); }
         return;
       }
 
-      // 3. Encender / Apagar
-      const TOGGLE_OFF = /apag|desactiv|apagar|desactivar/;
-      const TOGGLE_ON  = /encend|activ|encender|activar/;
-      let targetLight = null, targetIdx = -1;
+      // 3. Encender/Apagar/Subir/Bajar
+      const TOGGLE_OFF = /apag|desactiv|apagar|desactivar|bajar|baja|cierra|cerrar/;
+      const TOGGLE_ON  = /encend|activ|encender|activar|subir|sube|abre|abrir/;
+      let targetApp = null, targetIdx = -1;
       
-      for (let i = 0; i < state.lights.length; i++) {
-        if (tNorm.includes(norm(state.lights[i].name)) || tNorm.includes(norm(state.lights[i].room))) {
-          targetLight = state.lights[i]; targetIdx = i; break;
-        }
+      for (let i = 0; i < state.appliances.length; i++) {
+        if (tNorm.includes(norm(state.appliances[i].name))) { targetApp = state.appliances[i]; targetIdx = i; break; }
       }
       
-      // SOLO actúa si ha encontrado una coincidencia exacta de luz
-      if (targetLight) {
-        
-        if (TOGGLE_OFF.test(t)) {
-            targetLight.on = false;
-        } 
-        else if (TOGGLE_ON.test(t)) {
-            targetLight.on = true;
-        }
+      if (targetApp) {
+        if (TOGGLE_OFF.test(tNorm)) targetApp.on = false;
+        else if (TOGGLE_ON.test(tNorm)) targetApp.on = true;
         else { socket.emit('voiceUnknown', { text }); return; }
         
-        state.lightsCursor = targetIdx; 
-        saveLights(); 
-        io.emit('stateUpdate', state);
-        socket.emit('lightToggled', { name: targetLight.name, on: targetLight.on }); 
+        state.appliancesCursor = targetIdx; 
+        saveAppliances(); io.emit('stateUpdate', state);
+        socket.emit('applianceToggled', { name: targetApp.name, on: targetApp.on }); 
         return;
       } else {
-        // Si el comando es de encender/apagar pero no ha entendido la luz, NO hace nada (ni usa el cursor)
-        socket.emit('voiceUnknown', { text }); 
-        return;
+        socket.emit('voiceUnknown', { text }); return;
       }
     }
 
     // ── MENÚ PRINCIPAL ──
     if (state.activeSection === null) {
-      if (/(luz|luces)/.test(tNorm))                { state.activeSection = 'lights';   io.emit('stateUpdate', state); socket.emit('taskSaved', { text: '💡 Abriendo Luces' });   return; }
+      if (/(electrodomestico|electrodomesticos|dispositivo|dispositivos)/.test(tNorm)) { state.activeSection = 'appliances'; io.emit('stateUpdate', state); socket.emit('taskSaved', { text: '🔌 Abriendo Dispositivos' }); return; }
       if (/(tarea|tareas)/.test(tNorm))              { state.activeSection = 'tasks';    io.emit('stateUpdate', state); socket.emit('taskSaved', { text: '✅ Abriendo Tareas' });   return; }
       if (/(^objeto|^objetos)/.test(tNorm))          { state.activeSection = 'objects';  io.emit('stateUpdate', state); socket.emit('taskSaved', { text: '📦 Abriendo Objetos' }); return; }
       if (/(pago|pagos|cuenta|cuentas)/.test(tNorm)) { state.activeSection = 'payments'; io.emit('stateUpdate', state); socket.emit('taskSaved', { text: '💳 Abriendo Pagos' });   return; }
@@ -689,7 +693,7 @@ io.on('connection', socket => {
   // ── ENTER ──
   socket.on('enter', () => {
     if (state.activeSection === null) {
-      const sections = ['lights', 'tasks', 'objects', 'payments'];
+      const sections = ['appliances', 'tasks', 'objects', 'payments'];
       const idx      = state.cursor.y * GRID_W + state.cursor.x;
       state.activeSection = sections[idx];
     }
@@ -708,12 +712,11 @@ io.on('connection', socket => {
   socket.on('action', async () => {
     if (state.activeSection === null) return;
 
-    if (state.activeSection === 'lights' && state.lights.length > 0) {
-      const l = state.lights[state.lightsCursor];
-      l.on = !l.on;
-      saveLights();
-      // Avisamos al móvil para que envíe el comando Bluetooth
-      io.emit('lightToggled', { name: l.name, on: l.on });
+    if (state.activeSection === 'appliances' && state.appliances.length > 0) {
+      const a = state.appliances[state.appliancesCursor];
+      a.on = !a.on;
+      saveAppliances();
+      io.emit('applianceToggled', { name: a.name, on: a.on });
     } else if (state.activeSection === 'objects' && state.objects.length > 0) {
       // En objetos, action emite el historial del objeto seleccionado
       const obj = state.objects[state.objectsCursor];

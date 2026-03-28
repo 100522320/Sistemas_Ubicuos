@@ -305,12 +305,12 @@
 
 <div id="app">
   <div id="grid-view">
-    <div class="section-card" id="card-lights" onclick="enterSection('lights')">
+    <div class="section-card" id="card-appliances" onclick="enterSection('appliances')">
       <span class="cursor-arrow">›</span>
-      <div class="card-icon">💡</div>
-      <div class="card-title">Luces</div>
-      <div class="card-subtitle">Iluminación de la casa</div>
-      <div class="card-stats" id="lights-stats"></div>
+      <div class="card-icon">🔌</div>
+      <div class="card-title">Dispositivos</div>
+      <div class="card-subtitle">Gestión de electrodomésticos</div>
+      <div class="card-stats" id="appliances-stats"></div>
     </div>
     <div class="section-card" id="card-tasks" onclick="enterSection('tasks')">
       <span class="cursor-arrow">›</span>
@@ -321,7 +321,7 @@
     </div>
     <div class="section-card" id="card-objects" onclick="enterSection('objects')">
       <span class="cursor-arrow">›</span>
-      <div class="card-icon">👓</div>
+      <div class="card-icon">📦</div>
       <div class="card-title">Objetos perdidos</div>
       <div class="card-subtitle">¿Dónde está cada cosa?</div>
       <div class="card-stats" id="objects-stats"></div>
@@ -336,14 +336,14 @@
   </div>
 
   <div id="section-view">
-    <!-- LUCES -->
-    <div id="view-lights" style="display:none; height:100%">
+    <!-- Electrodomesticos -->
+    <div id="view-appliances" style="display:none; height:100%">
       <div class="section-header">
-        <div class="section-icon">💡</div>
-        <h2>LUCES</h2>
+        <div class="section-icon">🔌</div>
+        <h2>DISPOSITIVOS</h2>
         <div class="back-hint">← atrás</div>
       </div>
-      <div id="lights-grid"></div>
+      <div id="appliances-grid" style="height:calc(100vh - 190px); overflow-y:auto; padding-bottom:120px; scrollbar-width:none;"></div>
     </div>
 
     <!-- TAREAS -->
@@ -486,25 +486,25 @@
   function showGrid(s) {
     document.getElementById('grid-view').classList.remove('hidden');
     document.getElementById('section-view').classList.remove('visible');
-    ['lights','tasks','objects','payments'].forEach(sec => {
+    ['appliances','tasks','objects','payments'].forEach(sec => {
       document.getElementById('view-' + sec).style.display = 'none';
     });
-    const sections  = ['lights','tasks','objects','payments'];
+    const sections  = ['appliances','tasks','objects','payments'];
     const activeIdx = s.cursor.y * 2 + s.cursor.x;
     sections.forEach((sec, i) => {
       document.getElementById('card-' + sec).classList.toggle('active', i === activeIdx);
     });
-    renderLightsStats(s);
+    renderAppliancesStats(s);
     renderTasksStats(s);
     renderObjectsStats(s);
     renderPaymentsStats(s);
   }
 
-  function renderLightsStats(s) {
-    const on = s.lights.filter(l => l.on).length;
-    document.getElementById('lights-stats').innerHTML = `
-      <div class="stat-chip"><div class="stat-dot amber"></div>${on} encendidas</div>
-      <div class="stat-chip"><div class="stat-dot copper"></div>${s.lights.length - on} apagadas</div>`;
+  function renderAppliancesStats(s) {
+    const on = s.appliances.filter(a => a.on).length;
+    document.getElementById('appliances-stats').innerHTML = `
+      <div class="stat-chip"><div class="stat-dot amber"></div>${on} activos</div>
+      <div class="stat-chip"><div class="stat-dot copper"></div>${s.appliances.length - on} apagados</div>`;
   }
   function renderTasksStats(s) {
     const done = s.tasks.filter(t => t.done).length;
@@ -530,13 +530,13 @@
   function showSection(s) {
     document.getElementById('grid-view').classList.add('hidden');
     document.getElementById('section-view').classList.add('visible');
-    ['lights','tasks','objects','payments'].forEach(sec => {
+    ['appliances','tasks','objects','payments'].forEach(sec => {
       document.getElementById('view-' + sec).style.display = 'none';
     });
     const v = document.getElementById('view-' + s.activeSection);
     v.style.display = (s.activeSection === 'tasks') ? 'flex' : 'block';
     switch(s.activeSection) {
-      case 'lights':   renderLights(s);   break;
+      case 'appliances':   renderAppliances(s);   break;
       case 'tasks':    renderTasks(s);    break;
       case 'objects':  renderObjects(s);  break;
       case 'payments': renderPayments(s); break;
@@ -545,18 +545,47 @@
 
   function enterSection(sec) { socket.emit('enter'); }
 
-  function renderLights(s) {
-    const g = document.getElementById('lights-grid');
-    g.innerHTML = s.lights.map((l,i) => `
-      <div class="light-card ${l.on?'on':''} ${i===s.lightsCursor?'active-cursor':''}">
-        <div class="light-room">${l.room}</div>
-        <div class="light-icon">${l.icon}</div>
-        <div class="light-name">${l.name}</div>
-        <div class="light-toggle"></div>
-      </div>`).join('');
-    const cards = g.querySelectorAll('.light-card');
-    if (cards[s.lightsCursor]) cards[s.lightsCursor].scrollIntoView({block:'nearest',behavior:'smooth'});
-  }
+  function renderAppliances(s) {
+      const container = document.getElementById('appliances-grid');
+      const cats = [
+        { id: 'light', name: 'Luces' },
+        { id: 'blind', name: 'Persianas' },
+        { id: 'heating', name: 'Calefacción' },
+        { id: 'ac', name: 'Aire Acondicionado' },
+        { id: 'fan', name: 'Ventiladores de techo' },
+        { id: 'other', name: 'Otros' }
+      ];
+
+      let html = '';
+      cats.forEach(c => {
+        // Filtramos los elementos de esta categoría
+        const items = s.appliances.map((a, i) => ({...a, _idx: i})).filter(a => a.category === c.id);
+
+        // Si hay elementos, los dibujamos. Si no, ponemos un texto de marcador de posición.
+        const itemsHtml = items.length > 0 
+          ? items.map(a => `
+              <div class="light-card ${a.on?'on':''} ${a._idx===s.appliancesCursor?'active-cursor':''}" style="min-width: 150px; flex-shrink:0;">
+                <div class="light-icon">${a.icon}</div>
+                <div class="light-name">${a.name}</div>
+                <div class="light-toggle"></div>
+              </div>
+            `).join('')
+          : `<div style="font-size: .8rem; color: var(--muted2); font-style: italic; padding-top: 6px;">Sin dispositivos</div>`;
+
+        html += `
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-family:'Cinzel',serif; color:var(--muted); margin-bottom: 4px; font-size: .9rem; letter-spacing:.1em;">${c.name}</h3>
+            <div style="display:flex; gap:14px; overflow-x:auto; padding: 12px 10px 20px 4px; scrollbar-width:none;">
+              ${itemsHtml}
+            </div>
+          </div>`;
+      });
+      container.innerHTML = html;
+
+      // Hacer scroll automático al elemento seleccionado
+      const active = container.querySelector('.active-cursor');
+      if (active) active.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
+    }
 
   function renderTasks(s) {
     const list = document.getElementById('tasks-container');

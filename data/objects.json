@@ -12,6 +12,16 @@
         "location": "La cocina",
         "who": "Tomas",
         "when": "2026-03-27T10:58:56.507Z"
+      },
+      {
+        "location": "La cocina",
+        "who": "Pepe",
+        "when": "2026-03-30T10:23:43.606Z"
+      },
+      {
+        "location": "El salon",
+        "who": "Manolo",
+        "when": "2026-03-30T10:23:54.259Z"
       }
     ]
   },

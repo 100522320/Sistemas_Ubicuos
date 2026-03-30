@@ -15,6 +15,79 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── CONFIGURACIÓN IA (HuggingFace) ──
+let aiGenerator = null;
+let aiMessages = [{ 
+  role: "system", 
+  content: "Eres Pepe, el asistente personal de un hogar inteligente. Responde SIEMPRE de forma natural y SÓLO en español. NUNCA uses chino, inglés ni otros idiomas. Sé directo, amable y conciso." 
+}];
+let isAiResponding = false;
+
+async function initAI(retries = 3) {
+  try {
+    console.log("🤖 Pepe: Descargando/Cargando modelo...");
+    const { pipeline } = await import('@huggingface/transformers');
+    
+    aiGenerator = await pipeline("text-generation", "onnx-community/Qwen2.5-0.5B-Instruct", { 
+      dtype: "q4",
+      // ── Capturar el progreso y enviarlo a las pantallas ──
+      progress_callback: (info) => {
+        if (info.status === 'progress') {
+          io.emit('aiProgress', { progress: Math.round(info.progress) });
+        }
+      }
+    });
+    
+    console.log("🤖 Pepe: ¡Modelo listo y cargado en el servidor!");
+    io.emit('aiReady'); 
+  } catch (error) {
+    console.error(`❌ Error cargando la IA (${retries} intentos restantes). Motivo:`, error.message);
+    if (retries > 0) {
+      console.log("🔄 Reintentando en 5 segundos...");
+      setTimeout(() => initAI(retries - 1), 5000);
+    }
+  }
+}
+initAI(); // Ejecutar al arrancar el servidor
+
+// Función principal para pensar y emitir tokens
+async function askPepe(question) {
+  if (!aiGenerator || isAiResponding) return;
+  isAiResponding = true;
+  
+  aiMessages.push({ role: "user", content: question });
+  io.emit('aiStart', { question }); // Dice a la pantalla que cree las burbujas
+
+  try {
+    const { TextStreamer } = await import('@huggingface/transformers');
+    let fullResponse = "";
+    
+    // El streamer enviará cada trocito de palabra por socket
+    const streamer = new TextStreamer(aiGenerator.tokenizer, {
+      skip_prompt: true,
+      callback_function: (token) => {
+        fullResponse += token;
+        io.emit('aiToken', { token });
+      }
+    });
+
+    await aiGenerator(aiMessages, {
+      max_new_tokens: 150,
+      temperature: 0.4,          // Menos creatividad = menos alucinaciones extrañas
+      repetition_penalty: 1.1,   // Evita que repita la misma palabra en bucle
+      streamer: streamer
+    });
+
+    aiMessages.push({ role: "assistant", content: fullResponse });
+  } catch(e) {
+    console.error("Error en Pepe:", e);
+    io.emit('aiToken', { token: " [Error generando respuesta]" });
+  } finally {
+    isAiResponding = false;
+    io.emit('aiEnd'); // Libera la pantalla
+  }
+}
+
 // ── BASES DE DATOS INDEPENDIENTES POR ZONA ──
 
 const DATA_DIR = path.join(__dirname, 'data');
@@ -224,6 +297,11 @@ io.on('connection', socket => {
   console.log(`[+] ${socket.id} connected`);
   socket.emit('fullState', state);
 
+  // Si la IA ya existe, avisa al nuevo cliente que se conecte
+  if (aiGenerator) {
+    socket.emit('aiReady');
+  }
+
   // ── NAVIGATE ──
   socket.on('navigate', async dir => {
     if (state.activeSection === null) {
@@ -234,6 +312,9 @@ io.on('connection', socket => {
       if (dir === 'down')  y = Math.min(1, y + 1);
       state.cursor = { x, y };
     } else {
+      // ── Evitar que el servidor busque listas si estamos hablando con Pepe ──
+      if (state.activeSection === 'chat') return;
+
       const key     = state.activeSection + 'Cursor';
       const listKey = state.activeSection;
 
@@ -326,14 +407,55 @@ io.on('connection', socket => {
     io.emit('stateUpdate', state);
   });
 
+  // ── TEXTO DIRECTO (Desde el input del chat) ──
+  socket.on('askAi', (text) => {
+    state.activeSection = 'chat';
+    io.emit('stateUpdate', state);
+    askPepe(text);
+  });
+
   // ── VOZ ──
   socket.on('voiceTask', async (text) => {
     if (!text || text.trim() === '') return;
     const t     = text.trim().toLowerCase();
     const tNorm = norm(t);
 
-    const TOGGLE_OFF = /apag|desactiv|apagar|desactivar/;
-    const TOGGLE_ON  = /encend|activ|encender|activar/;
+    // 1. CASO: TRIGGER "OYE PEPE"
+    const TRIGGER_PEPE = /^(oye )?pepe/;
+    if (TRIGGER_PEPE.test(tNorm)) {
+      let question = t.replace(/^(oye )?pepe/i, '').trim();
+      
+      state.activeSection = 'chat';
+      io.emit('stateUpdate', state);
+      io.emit('aiCommand'); // Fuerza abrir el chat
+      
+      if (question === '') {
+        socket.emit('taskSaved', { text: '🤖 Pepe: ¿Dime?' });
+      } else {
+        socket.emit('taskSaved', { text: `🤖 Preguntando a Pepe...` });
+        askPepe(question);
+      }
+      return; // Detener ejecución normal
+    }
+
+    // 2. CASO: ESTAMOS DENTRO DEL CHAT
+    if (state.activeSection === 'chat') {
+      // Excepción para dejar salir del chat
+      const NAVIGATION = /^(ir a |abrir |mostrar )?(inicio|principal|dispositivos|tareas|clima|objetos|pagos)/;
+      
+      if (!NAVIGATION.test(tNorm) && tNorm.length > 2) {
+        socket.emit('taskSaved', { text: `🤖 Pepe pensando...` });
+        askPepe(t); // Le pasamos el texto original (con mayúsculas/tildes)
+        return; 
+      }
+    }
+
+    // ── COMANDO GLOBAL DEL CLIMA ──
+    if (/(actualiza|actualizar|dime|que|qué|como).*(tiempo|clima)/.test(tNorm) || /^(tiempo|clima)$/.test(tNorm)) {
+      io.emit('updateWeather'); // Le dice a la pantalla que actualice
+      socket.emit('taskSaved', { text: '🌤 Actualizando clima...' }); // Respuesta visual y sonora en el móvil
+      return; 
+    }
 
     // ── SECCIÓN: TAREAS ──
     if (state.activeSection === 'tasks') {
@@ -702,6 +824,19 @@ io.on('connection', socket => {
 
   // ── BACK ──
   socket.on('back', () => {
+    // ── LÓGICA DE SALIDA DEL CHAT ──
+    if (state.activeSection === 'chat') {
+      console.log("🔙 Saliendo del chat con Pepe");
+      // Volvemos al inicio
+      state.activeSection = null;
+      
+      // Enviamos el evento para que la pantalla se entere y cambie
+      io.emit('stateUpdate', state);
+      
+      // Le decimos a la pantalla explícitamente que cierre la UI de Pepe
+      io.emit('aiCommand', { action: 'close' });
+      return; // Importante para que no siga bajando
+    }
     if (state.activeSection !== null) {
       state.activeSection = null;
       io.emit('stateUpdate', state);

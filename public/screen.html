@@ -282,10 +282,50 @@
   @keyframes spin { to { transform:rotate(360deg); } }
   #conn-overlay p { color:var(--muted); font-size:.85rem; letter-spacing:.1em; font-family:'Cinzel',serif; }
 
-  /* avatar colors */
-  .av-Christian { background:rgba(106,176,232,.15); color:var(--blue);   border:1px solid rgba(106,176,232,.3); }
-  .av-Adrian    { background:rgba(160,126,212,.15); color:var(--purple); border:1px solid rgba(160,126,212,.3); }
-  .av-Casa      { background:rgba(126,201,138,.12); color:var(--green);  border:1px solid rgba(126,201,138,.22); }
+ /* ESTILOS DEL ASISTENTE AI & CHAT */
+  .header-icon {
+    font-size: 1.5rem; cursor: pointer; margin-right: 1.5vw;
+    padding: 5px; border-radius: 50%; transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .header-icon:hover { background: var(--surface2); transform: scale(1.1); box-shadow: var(--glow); }
+  
+  .ai-loading { animation: pulseAI 1.5s infinite; filter: grayscale(1); opacity: 0.5; cursor: wait; }
+  .ai-ready { filter: none; opacity: 1; animation: none; }
+  @keyframes pulseAI { 0% { box-shadow: 0 0 0 0 rgba(160, 160, 160, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(160, 160, 160, 0); } 100% { box-shadow: 0 0 0 0 rgba(160, 160, 160, 0); } }
+
+  .chat-container {
+    display: flex; flex-direction: column; height: 75vh; width: 100%;
+    background: var(--surface2); border-radius: var(--rd); border: 1px solid var(--border);
+    padding: 20px; box-sizing: border-box; box-shadow: var(--shadow);
+  }
+  #chat-messages {
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 15px;
+    padding-right: 10px; margin-bottom: 20px;
+  }
+  .message { 
+  max-width: 80%; 
+  padding: 12px 16px; 
+  border-radius: 15px; 
+  line-height: 1.4; 
+  font-size: 0.95rem; 
+  word-wrap: break-word;   /* Fuerza el salto de línea si la palabra es muy larga */
+  white-space: pre-wrap;   /* Respeta los espacios en blanco y los saltos que mande la IA */
+}
+  .message.user { align-self: flex-end; background: var(--grey); color: #fff; border-bottom-right-radius: 4px; }
+  .message.ai { align-self: flex-start; background: var(--surface1); color: var(--amber); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+  .message b { color: var(--muted); font-size: 0.8rem; display: block; margin-bottom: 4px; }
+  
+  #chat-input-area { display: flex; gap: 10px; padding-top: 15px; border-top: 1px solid var(--border2); }
+  #chat-input-area input {
+    flex: 1; background: rgba(0,0,0,0.2); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 12px; color: #fff; font-size: 1rem;
+  }
+  #chat-input-area button {
+    background: var(--amber); color: #000; border: none; border-radius: 10px;
+    padding: 0 20px; font-weight: 700; cursor: pointer; transition: 0.2s;
+  }
+  #chat-input-area button:disabled, #chat-input-area input:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -298,6 +338,17 @@
 <div id="header">
   <div class="logo">SMART HOME</div>
   <div class="sep"></div>
+  <div style="display: flex; align-items: center; margin-right: 1.5vw; gap: 8px;">
+    <div id="ai-trigger" class="header-icon ai-loading" style="margin-right: 0;" title="Cargando IA en servidor...">🤖</div>
+    <span id="ai-progress-text" style="font-size: 0.85rem; color: var(--amber); font-family: 'DM Mono', monospace; font-weight: bold; width: 45px;"></span>
+  </div>
+  <div id="weather-widget" style="display:flex; align-items:center; gap:12px; background:var(--surface2); padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border2); margin-right: 2vw;">
+    <span id="w-location" style="font-size: 0.85rem; color:var(--muted); font-weight:600; border-right: 1px solid var(--border); padding-right: 12px;" title="Tu ubicación real">📍 Localizando...</span>
+    <span id="w-icon" style="font-size: 1.2rem;" title="Clima actual">🌤</span>
+    <span id="w-temp" style="font-family:'DM Mono',monospace; color:var(--amber); font-weight:600;">--°C</span>
+    <span id="w-wind" style="font-family:'DM Mono',monospace; color:var(--muted); font-size:0.85rem;">🌬 -- km/h</span>
+    <span id="w-rain" style="font-family:'DM Mono',monospace; color:var(--blue); font-size:0.85rem;">💧 -- mm</span>
+  </div>
   <div class="status-dot" id="dot"></div>
   <div class="conn-label" id="conn-label">SIN CONEXIÓN</div>
   <div class="clock" id="clock">--:--:--</div>
@@ -383,6 +434,22 @@
       <div id="pay-summary"></div>
       <div id="payments-list"></div>
     </div>
+
+    <div id="view-chat" style="display:none; height:100%; flex-direction:column; padding-bottom: 40px">
+      <div class="section-header">
+        <div class="section-icon">🤖</div>
+        <h2>CHAT CON PEPE</h2>
+        <div class="back-hint">← atrás</div>
+      </div>
+      <div class="chat-container" style="flex:1; margin-top: 10px;">
+        <div id="chat-messages"></div>
+        <div id="chat-input-area">
+          <input type="text" id="ai-input" placeholder="Pregúntale algo a Pepe..." disabled>
+          <button id="ai-send" disabled>Enviar</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -402,6 +469,8 @@
   <span>🎤 <span class="key">voz</span></span>
   <span style="border-left:1px solid var(--border);padding-left:14px;margin-left:4px">Supr <span class="key">borrar tarea</span></span>
 </div>
+
+
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -530,16 +599,24 @@
   function showSection(s) {
     document.getElementById('grid-view').classList.add('hidden');
     document.getElementById('section-view').classList.add('visible');
-    ['appliances','tasks','objects','payments'].forEach(sec => {
-      document.getElementById('view-' + sec).style.display = 'none';
+    
+    ['appliances','tasks','objects','payments', 'chat'].forEach(sec => {
+      const el = document.getElementById('view-' + sec);
+      if(el) el.style.display = 'none';
     });
+    
+    // Mostramos la sección activa actual
     const v = document.getElementById('view-' + s.activeSection);
-    v.style.display = (s.activeSection === 'tasks') ? 'flex' : 'block';
+    if(v) {
+        v.style.display = (s.activeSection === 'tasks' || s.activeSection === 'chat') ? 'flex' : 'block';
+    }
+
     switch(s.activeSection) {
       case 'appliances':   renderAppliances(s);   break;
-      case 'tasks':    renderTasks(s);    break;
-      case 'objects':  renderObjects(s);  break;
-      case 'payments': renderPayments(s); break;
+      case 'tasks':        renderTasks(s);        break;
+      case 'objects':      renderObjects(s);      break;
+      case 'payments':     renderPayments(s);     break;
+      // No necesitamos un 'case' para el chat porque se maneja por Sockets
     }
   }
 
@@ -741,6 +818,146 @@
       const t = state.tasks[state.tasksCursor];
       if (t) { await fetch(`/api/tasks/${t.id}`, {method:'DELETE'}); loadApiTasks(); }
     }
+  });
+
+  // ── INTEGRACIÓN DEL CLIMA Y UBICACIÓN ──
+
+  // Escuchar la orden del servidor para actualizar el clima
+  socket.on('updateWeather', () => {
+      document.getElementById("w-location").innerText = "📍 Actualizando...";
+      getLocation();
+  });
+
+  function getLocation() {
+      if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+              (position) => {
+                  const lat = position.coords.latitude;
+                  const lon = position.coords.longitude;
+                  getWeather(lat, lon);
+                  getCityName(lat, lon);
+              },
+              (error) => {
+                  console.warn("Error obteniendo ubicación: ", error.message);
+                  document.getElementById("w-location").innerText = "📍 Madrid (Por defecto)";
+                  getWeather(40.4168, -3.7038); 
+              }
+          );
+      } else {
+          document.getElementById("w-location").innerText = "📍 Ubicación no soportada";
+      }
+  }
+
+  function getCityName(lat, lon) {
+      const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=es`;
+      fetch(url)
+          .then(response => response.json())
+          .then(data => {
+              const city = data.locality || data.city || data.principalSubdivision || "Ubicación actual";
+              document.getElementById("w-location").innerText = `📍 ${city}`;
+          })
+          .catch(error => {
+              console.error("Error obteniendo ciudad:", error);
+              document.getElementById("w-location").innerText = "📍 Coordenadas OK";
+          });
+  }
+
+  function getWeather(lat, lon) {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation,wind_speed_10m,weather_code`;
+      fetch(url)
+          .then(response => {
+              if (!response.ok) throw new Error("Error en la API");
+              return response.json();
+          })
+          .then(data => {
+              const temp = data.current.temperature_2m;
+              const wind = data.current.wind_speed_10m;
+              const rain = data.current.precipitation;
+              const code = data.current.weather_code;
+
+              let icon = "🌤";
+              if (code === 0) icon = "☀️"; 
+              else if (code >= 1 && code <= 3) icon = "⛅"; 
+              else if (code >= 45 && code <= 48) icon = "🌫️"; 
+              else if (code >= 51 && code <= 67) icon = "🌧️"; 
+              else if (code >= 71 && code <= 77) icon = "❄️"; 
+              else if (code >= 80 && code <= 82) icon = "🌦️"; 
+              else if (code >= 95 && code <= 99) icon = "⛈️"; 
+
+              document.getElementById("w-icon").innerText = icon;
+              document.getElementById("w-temp").innerText = `${temp}°C`;
+              document.getElementById("w-wind").innerText = `🌬 ${wind} km/h`;
+              document.getElementById("w-rain").innerText = `💧 ${rain} mm`;
+          })
+          .catch(error => console.error("Error al obtener clima:", error));
+  }
+
+  window.addEventListener('load', getLocation);
+
+  // ── LÓGICA DEL CLIENTE (IA en Servidor) ──
+  const aiTrigger = document.getElementById('ai-trigger');
+  const chatMessages = document.getElementById('chat-messages');
+  const inputEl = document.getElementById('ai-input');
+  const sendBtn = document.getElementById('ai-send');
+  let currentAiMsgId = null;
+
+  function appendMsg(role, text, id = null) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${role}`;
+    msgDiv.innerHTML = `<b>${role === 'user' ? 'Tú' : 'Pepe'}</b><span class="content">${text}</span>`;
+    if (id) msgDiv.id = id;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // Click manual
+  sendBtn.onclick = () => { if(inputEl.value) { socket.emit('askAi', inputEl.value); inputEl.value = ''; } };
+  inputEl.onkeypress = (e) => { if(e.key === 'Enter') sendBtn.click(); };
+  
+  // En lugar de forzar la UI, emitimos el evento al servidor para que él organice la vista
+  aiTrigger.onclick = () => { socket.emit('voiceTask', 'oye pepe'); };
+
+  // ── Escuchar el progreso de descarga ──
+  socket.on('aiProgress', (data) => {
+    const progressTxt = document.getElementById('ai-progress-text');
+    if (progressTxt) {
+      progressTxt.innerText = `${data.progress}%`;
+    }
+  });
+
+  // Sockets recibidos del servidor
+  socket.on('aiReady', () => {
+    aiTrigger.classList.replace('ai-loading', 'ai-ready');
+    aiTrigger.title = "Hablar con Pepe";
+    inputEl.disabled = false; sendBtn.disabled = false;
+    
+    const progressTxt = document.getElementById('ai-progress-text');
+    if (progressTxt) progressTxt.innerText = ''; // Borramos el texto
+  });
+
+  socket.on('aiCommand', (data) => {
+    // Si la data trae action: 'close', mandamos atrás
+    if (data && data.action === 'close') {
+        socket.emit('back'); 
+    }
+  });
+
+  socket.on('aiStart', (data) => {
+    appendMsg('user', data.question);
+    currentAiMsgId = 'ai-resp-' + Date.now();
+    appendMsg('ai', '', currentAiMsgId);
+    inputEl.disabled = true; sendBtn.disabled = true;
+  });
+
+  socket.on('aiToken', (data) => {
+    if(!currentAiMsgId) return;
+    document.getElementById(currentAiMsgId).querySelector('.content').textContent += data.token;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+  socket.on('aiEnd', () => {
+    currentAiMsgId = null;
+    inputEl.disabled = false; sendBtn.disabled = false;
+    inputEl.focus();
   });
 </script>
 </body>

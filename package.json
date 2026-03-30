@@ -5,9 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev":   "npx nodemon server.js"
+    "dev": "npx nodemon server.js"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.0.0-next.7",
     "express": "^4.18.2",
     "socket.io": "^4.7.2"
   }

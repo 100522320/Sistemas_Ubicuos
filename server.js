@@ -438,7 +438,19 @@ io.on('connection', socket => {
       return; // Detener ejecución normal
     }
 
-    // 2. CASO: ESTAMOS DENTRO DEL CHAT
+    // 2. CASO: PIKACHU MODE
+    if (/pikachu te elijo a ti/.test(tNorm)) {
+      io.emit('pikachuMode', true);
+      socket.emit('taskSaved', { text: '⚡ ¡PIKACHU, TE ELIJO A TI!' });
+      return;
+    }
+    if (/^pikachu vuelve$/.test(tNorm)) {
+      io.emit('pikachuMode', false);
+      socket.emit('taskSaved', { text: '⚡ Pikachu ha vuelto a la Pokéball' });
+      return;
+    }
+
+    // 3. CASO: ESTAMOS DENTRO DEL CHAT
     if (state.activeSection === 'chat') {
       // Excepción para dejar salir del chat
       const NAVIGATION = /^(ir a |abrir |mostrar )?(inicio|principal|dispositivos|tareas|clima|objetos|pagos)/;
@@ -452,10 +464,36 @@ io.on('connection', socket => {
 
     // ── COMANDO GLOBAL DEL CLIMA ──
     if (/(actualiza|actualizar|dime|que|qué|como).*(tiempo|clima)/.test(tNorm) || /^(tiempo|clima)$/.test(tNorm)) {
-      io.emit('updateWeather'); // Le dice a la pantalla que actualice
-      socket.emit('taskSaved', { text: '🌤 Actualizando clima...' }); // Respuesta visual y sonora en el móvil
+      io.emit('updateWeather'); // Le dice a la pantalla que actualice los gráficos
+      socket.emit('taskSaved', { text: '🌤 Actualizando clima...' }); // Respuesta visual en el móvil
+     fetch('https://wttr.in/?format=j1&lang=es')
+        .then(res => res.json())
+        .then(data => {
+          const temp = parseInt(data.current_condition[0].temp_C);
+          const desc = data.current_condition[0].lang_es[0].value.toLowerCase();
+          
+          let frase = `El tiempo actual es de ${temp} grados y está ${desc}. `;
+          
+          if (desc.includes('lluvia') || desc.includes('chubasco') || desc.includes('llovizna')) {
+            frase += "Te recomiendo que cojas un paraguas antes de salir.";
+          } else if (temp > 28) {
+            frase += "Hace mucho calor, lleva una botella de agua y ponte protección solar.";
+          } else if (temp < 12) {
+            frase += "Hace frío, no te olvides de coger un buen abrigo.";
+          } else if (desc.includes('sol') || desc.includes('despejado')) {
+            frase += "Hace un tiempo excelente, disfruta del día.";
+          } else {
+            frase += "Que tengas un buen día.";
+          }
+
+          // Enviar la frase a la pantalla para que la lea
+          io.emit('speakPhrase', { text: frase });
+        })
+        .catch(err => console.error("Error obteniendo clima para la voz:", err));
+
       return; 
-    }
+    } 
+    
 
     // ── SECCIÓN: TAREAS ──
     if (state.activeSection === 'tasks') {

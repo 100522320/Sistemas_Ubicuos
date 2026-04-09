@@ -360,6 +360,7 @@ const socket = io();
                   const lon = position.coords.longitude;
                   getWeather(lat, lon);
                   getCityName(lat, lon);
+                  socket.emit('guardarUbicacionReal', { lat, lon });
               },
               (error) => {
                   console.warn("Error obteniendo ubicación: ", error.message);

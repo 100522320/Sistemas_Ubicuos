@@ -22,6 +22,7 @@ let aiMessages = [{
   content: "Eres Pepe, el asistente personal de un hogar inteligente. Responde SIEMPRE de forma natural y SÓLO en español. NUNCA uses chino, inglés ni otros idiomas. Sé directo, amable y conciso." 
 }];
 let isAiResponding = false;
+let ubicacionUsuario = { lat: "40.4168", lon: "-3.7038" }; // Por defecto
 
 async function initAI(retries = 3) {
   try {
@@ -413,7 +414,10 @@ io.on('connection', socket => {
     io.emit('stateUpdate', state);
     askPepe(text);
   });
-
+socket.on('guardarUbicacionReal', (coords) => {
+    ubicacionUsuario = coords;
+    console.log("📍 Ubicación actualizada para Pepe:", ubicacionUsuario);
+});
   // ── VOZ ──
   socket.on('voiceTask', async (text) => {
     if (!text || text.trim() === '') return;
@@ -464,35 +468,29 @@ io.on('connection', socket => {
 
     // ── COMANDO GLOBAL DEL CLIMA ──
     if (/(actualiza|actualizar|dime|que|qué|como).*(tiempo|clima)/.test(tNorm) || /^(tiempo|clima)$/.test(tNorm)) {
-      io.emit('updateWeather'); // Le dice a la pantalla que actualice los gráficos
-      socket.emit('taskSaved', { text: '🌤 Actualizando clima...' }); // Respuesta visual en el móvil
-     fetch('https://wttr.in/?format=j1&lang=es')
+    io.emit('updateWeather');
+    socket.emit('taskSaved', { text: '🌤 Actualizando clima...' });
+
+    // MODIFICADO: Ahora usamos la latitud y longitud guardadas
+    const url = `https://wttr.in/${ubicacionUsuario.lat},${ubicacionUsuario.lon}?format=j1&lang=es`;
+
+    fetch(url)
         .then(res => res.json())
         .then(data => {
-          const temp = parseInt(data.current_condition[0].temp_C);
-          const desc = data.current_condition[0].lang_es[0].value.toLowerCase();
-          
-          let frase = `El tiempo actual es de ${temp} grados y está ${desc}. `;
-          
-          if (desc.includes('lluvia') || desc.includes('chubasco') || desc.includes('llovizna')) {
-            frase += "Te recomiendo que cojas un paraguas antes de salir.";
-          } else if (temp > 28) {
-            frase += "Hace mucho calor, lleva una botella de agua y ponte protección solar.";
-          } else if (temp < 12) {
-            frase += "Hace frío, no te olvides de coger un buen abrigo.";
-          } else if (desc.includes('sol') || desc.includes('despejado')) {
-            frase += "Hace un tiempo excelente, disfruta del día.";
-          } else {
-            frase += "Que tengas un buen día.";
-          }
+            const temp = parseInt(data.current_condition[0].temp_C);
+            const desc = data.current_condition[0].lang_es[0].value.toLowerCase();
+            
+            // Opcional: Pepe te dice el barrio/ciudad que detecta wttr para confirmar
+            const ciudadDetectada = data.nearest_area[0].areaName[0].value;
+            let frase = `El tiempo actual en ${ciudadDetectada} es de ${temp} grados y está ${desc}. `;
+            
+            // ... resto de tu lógica de frases (lluvia, calor, frío) ...
 
-          // Enviar la frase a la pantalla para que la lea
-          io.emit('speakPhrase', { text: frase });
+            io.emit('speakPhrase', { text: frase });
         })
-        .catch(err => console.error("Error obteniendo clima para la voz:", err));
-
-      return; 
-    } 
+        .catch(err => console.error("Error en clima Pepe:", err));
+    return;
+}
     
 
     // ── SECCIÓN: TAREAS ──

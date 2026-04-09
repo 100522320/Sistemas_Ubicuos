@@ -488,12 +488,6 @@ const socket = io();
   socket.on('pikachuMode', (active) => {
     const body  = document.body;
     const badge = document.getElementById('pikachu-badge');
-    
-    const sonidoPikachu = new Audio('./secreto/pikapika.mp3'); 
-    sonidoPikachu.play().catch(error => {
-        console.log("Error al reproducir audio:", error);
-    });
-
     if (active) {
       body.classList.add('pikachu-mode', 'pikachu-flash');
       badge.classList.add('visible');

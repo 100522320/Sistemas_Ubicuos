@@ -157,7 +157,6 @@ const socket = io();
     utt.rate = 1.05;
     utt.pitch = 1.0;
     
-    // Lo más importante: cuando termine de hacer la pregunta, volvemos a encender el micro
     utt.onend = () => {
       setTimeout(() => startVoice(), 200); 
     };
@@ -219,7 +218,7 @@ const socket = io();
     }
   });
 
-  // ── NUEVO: objeto registrado ──
+  // ── : objeto registrado ──
   socket.on('objectLocated', ({ name, location, who }) => {
     playSuccess();
     navigator.vibrate && navigator.vibrate([40, 60, 40, 60, 120]);
@@ -228,7 +227,7 @@ const socket = io();
     flash('📦 UBICACIÓN GUARDADA');
   });
 
-  // ── NUEVO: respuesta de consulta de objeto — se lee por voz ──
+  // ── : respuesta de consulta de objeto — se lee por voz ──
   socket.on('objectQuery', ({ found, name, location, who, when }) => {
     voiceBtn('success');
     if (!found) {
@@ -248,7 +247,7 @@ const socket = io();
     }
   });
 
-  // ── NUEVO: error de objeto ──
+  // ── : error de objeto ──
   socket.on('objectError', ({ msg }) => {
     playError();
     navigator.vibrate && navigator.vibrate([200, 100, 200]);
@@ -473,8 +472,17 @@ const socket = io();
       navigator.vibrate && navigator.vibrate(50);
     };
 
-    recognition.onresult = (event) => {
+   recognition.onresult = (event) => {
       const text = event.results[0][0].transcript;
+      
+      const tNorm = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      
+      if (tNorm.includes('pikachu te elijo') || tNorm.includes('pikachu vuelve')) {
+         const sonidoPikachu = new Audio('./secreto/pikapika.mp3');
+         sonidoPikachu.play().catch(err => console.log("Error reproduciendo Pikachu en móvil:", err));
+      }
+      // -----------------------------------------------
+
       socket.emit('voiceTask', text);
       flash('🎤 ' + text.slice(0, 22).toUpperCase());
     };

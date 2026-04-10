@@ -514,6 +514,11 @@ function renderEvents(s) {
     // Filtramos los eventos para que solo muestre los del mes/año que estamos mirando
     const currentMonthEvents = (s.events || []).filter(e => e.month === month && e.year === year);
 
+    // Variables de "Hoy" para calcular el pasado
+    const todayDate = new Date().getDate();
+    const todayMonth = new Date().getMonth();
+    const todayYear = new Date().getFullYear();
+
     for (let day = 1; day <= daysInMonth; day++) {
         const dayDiv = document.createElement('div');
         dayDiv.textContent = day;
@@ -522,16 +527,31 @@ function renderEvents(s) {
         const dayEvents = currentMonthEvents.filter(e => e.day === day);
         if (dayEvents.length > 0) {
             dayDiv.style.backgroundColor = 'var(--amber2)'; dayDiv.style.color = '#fff'; dayDiv.style.borderColor = 'var(--amber)';
-        } else if (day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) {
-            dayDiv.style.borderColor = 'var(--blue)'; dayDiv.style.color = 'var(--blue)'; // Marca el día de hoy
+        } else if (day === todayDate && month === todayMonth && year === todayYear) {
+            dayDiv.style.borderColor = 'var(--blue)'; dayDiv.style.color = 'var(--blue)'; // Hoy
         }
+
+        // Si el día ya ha pasado, lo volvemos semitransparente (opacidad 0.3)
+        const isPast = (year < todayYear) || (year === todayYear && month < todayMonth) || (year === todayYear && month === todayMonth && day < todayDate);
+        if (isPast) {
+            dayDiv.style.opacity = '0.3';
+        }
+
         grid.appendChild(dayDiv);
     }
 
-    if (currentMonthEvents.length === 0) {
-        list.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">No hay eventos este mes.</div>';
+    // Filtramos los eventos para la LISTA INFERIOR (solo los que NO han pasado)
+    const upcomingEvents = currentMonthEvents.filter(e => {
+        if (year < todayYear) return false;
+        if (year === todayYear && month < todayMonth) return false;
+        if (year === todayYear && month === todayMonth && e.day < todayDate) return false;
+        return true;
+    });
+
+    if (upcomingEvents.length === 0) {
+        list.innerHTML = '<div style="color:var(--muted); font-size:0.85rem; text-align:center; margin-top:20px;">No hay eventos próximos este mes.</div>';
     } else {
-        currentMonthEvents.forEach((ev) => {
+        upcomingEvents.forEach((ev) => {
             list.innerHTML += `
                 <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; position:relative;">
                     <div style="position:absolute; top:12px; right:12px; background:var(--amber2); color:#fff; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold;">${ev.person}</div>

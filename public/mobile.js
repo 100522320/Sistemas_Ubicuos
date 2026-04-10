@@ -296,7 +296,7 @@ const socket = io();
       },
       main: {
         t: "🎤 Comandos — Inicio", c: "var(--cream)", bg: "rgba(240,230,208,.06)", bd: "rgba(240,230,208,.2)",
-        ex: "Navegar: <span>«Dispositivos»</span>, <span>«Tareas»,...</span><br>Clima: <span>«¿Qué tiempo hace?»</span><br>Asistente: <span>«Oye Pepe, ¿quién inventó el WiFi?»</span><br>Global: <span>«¿Qué tiempo hace?»</span>,<span>«¿Dónde están las gafas?»</span>"
+        ex: "Navegar: <span>«Dispositivos»</span>, <span>«T¿Que tengo el dia 2 de mayo?»,...</span><br>Clima: <span>«¿Qué tiempo hace?»</span><br>Asistente: <span>«Oye Pepe, ¿quién inventó el WiFi?»</span><br>Global: <span>«¿Qué tiempo hace?»</span>,<span>«¿Dónde están las gafas?»</span>"
       }
     };
     

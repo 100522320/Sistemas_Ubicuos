@@ -28,8 +28,9 @@ El servidor se levanta en **http://localhost:3000**
 | Pantalla TV | http://TU_IP:3000/screen.html   |
 | Móvil       | http://TU_IP:3000/mobile.html   |
 
-> Para conectar el móvil, usa la IP de tu ordenador en la red local (ej: 192.168.1.10)
-> Es recomendable compartir datos desde tu telefono al ordenador y luego mirar cual es su ip usando el comando ipconfig en la terminal
+> Para conectar el móvil, usa la IP de tu ordenador en la red local (ej: 192.168.1.10) y en chrome://flags ir al apartado de 'Insecure origins treated as secure', poner 'http://TU_IP:3000' y pinchar en habilitar
+
+> Hay que compartir datos desde tu telefono al ordenador/pantalla y luego mirar cual es su ip usando el comando ipconfig en la terminal
 
 ## Controles del Móvil
 

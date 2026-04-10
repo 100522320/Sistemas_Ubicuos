@@ -120,19 +120,20 @@ const socket = io();
       <div class="stat-chip"><div class="stat-dot amber"></div>${amount.toFixed(2)} €</div>`;
   }
 
-  function showSection(s) {
+function showSection(s) {
     document.getElementById('grid-view').classList.add('hidden');
     document.getElementById('section-view').classList.add('visible');
     
-    ['appliances','tasks','objects','payments', 'chat'].forEach(sec => {
+    // AÑADIDO 'events' a la lista
+    ['appliances','tasks','objects','payments', 'chat', 'events'].forEach(sec => {
       const el = document.getElementById('view-' + sec);
       if(el) el.style.display = 'none';
     });
     
-    // Mostramos la sección activa actual
     const v = document.getElementById('view-' + s.activeSection);
     if(v) {
-        v.style.display = (s.activeSection === 'tasks' || s.activeSection === 'chat') ? 'flex' : 'block';
+        // AÑADIDO 'events' al condicional flex
+        v.style.display = (s.activeSection === 'tasks' || s.activeSection === 'chat' || s.activeSection === 'events') ? 'flex' : 'block';
     }
 
     switch(s.activeSection) {
@@ -140,7 +141,7 @@ const socket = io();
       case 'tasks':        renderTasks(s);        break;
       case 'objects':      renderObjects(s);      break;
       case 'payments':     renderPayments(s);     break;
-      // No necesitamos un 'case' para el chat porque se maneja por Sockets
+      case 'events':       renderEvents(s);       break; // 
     }
   }
 
@@ -484,6 +485,67 @@ const socket = io();
     inputEl.disabled = false; sendBtn.disabled = false;
     inputEl.focus();
   });
+function renderEvents(s) {
+    const grid = document.getElementById('cal-grid');
+    const title = document.getElementById('cal-title');
+    const list = document.getElementById('events-list-container');
+    
+    grid.innerHTML = ''; list.innerHTML = '';
+    
+    const daysOfWeek = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    daysOfWeek.forEach(d => {
+        const div = document.createElement('div');
+        div.textContent = d;
+        div.style.color = 'var(--muted)'; div.style.fontWeight = 'bold';
+        grid.appendChild(div);
+    });
+
+    const year = s.calendarYear || new Date().getFullYear(); 
+    const month = s.calendarMonth !== undefined ? s.calendarMonth : new Date().getMonth();
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    title.textContent = monthNames[month] + ' ' + year;
+
+    let firstDay = new Date(year, month, 1).getDay();
+    firstDay = firstDay === 0 ? 6 : firstDay - 1; 
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) { grid.appendChild(document.createElement('div')); }
+
+    // Filtramos los eventos para que solo muestre los del mes/año que estamos mirando
+    const currentMonthEvents = (s.events || []).filter(e => e.month === month && e.year === year);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayDiv = document.createElement('div');
+        dayDiv.textContent = day;
+        dayDiv.style.padding = '10px'; dayDiv.style.border = '1px solid var(--border2)'; dayDiv.style.borderRadius = '8px';
+        
+        const dayEvents = currentMonthEvents.filter(e => e.day === day);
+        if (dayEvents.length > 0) {
+            dayDiv.style.backgroundColor = 'var(--amber2)'; dayDiv.style.color = '#fff'; dayDiv.style.borderColor = 'var(--amber)';
+        } else if (day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) {
+            dayDiv.style.borderColor = 'var(--blue)'; dayDiv.style.color = 'var(--blue)'; // Marca el día de hoy
+        }
+        grid.appendChild(dayDiv);
+    }
+
+    if (currentMonthEvents.length === 0) {
+        list.innerHTML = '<div style="color:var(--muted); font-size:0.85rem;">No hay eventos este mes.</div>';
+    } else {
+        currentMonthEvents.forEach((ev) => {
+            list.innerHTML += `
+                <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; position:relative;">
+                    <div style="position:absolute; top:12px; right:12px; background:var(--amber2); color:#fff; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold;">${ev.person}</div>
+                    <div style="color:var(--amber); font-weight:bold; font-size:1.1rem; margin-bottom:2px;">${ev.name}</div>
+                    <div style="color:var(--cream); font-size:0.9rem; margin-bottom:6px;">📅 Día ${ev.day} de ${monthNames[ev.month]}</div>
+                    <div style="color:var(--muted); font-size:0.85rem; display:flex; gap:15px;">
+                      <span>⏰ ${ev.time} h</span>
+                      <span>👥 ${ev.people} pers</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+  }
 
 // ── PIKACHU MODE ──
   socket.on('pikachuMode', (active) => {

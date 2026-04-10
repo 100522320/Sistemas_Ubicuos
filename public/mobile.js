@@ -274,6 +274,10 @@ const socket = io();
     
     // Objeto con todos los comandos de voz, incluyendo el menú principal ("main")
     const hints = {
+    events: {
+        t: "📅 Comandos — Eventos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
+        ex: "Añadir: <span>«Adrián añade evento Cena el día 15 de mayo a las 10 para 4»</span><br>Navegar: <span>«Mes siguiente / anterior»</span><br>Borrar: <span>«Borrar evento día 15 de mayo»</span>"
+      },
       appliances: {
         t: "🎤 Comandos — Dispositivos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
         ex: "Encender/Subir: <span>«Encender luz» / «Subir persiana salón»</span><br>Apagar/Bajar: <span>«Apagar aire» / «Bajar toldo»</span><br>Añadir: <span>«Añadir aire acondicionado»</span><br>Borrar: <span>«Borrar luz terraza»</span>"

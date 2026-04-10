@@ -19,6 +19,7 @@
   <div class="logo">SMART HOME</div>
   <div class="sep"></div>
   <div style="display: flex; align-items: center; margin-right: 1.5vw; gap: 8px;">
+    <div id="events-trigger" class="header-icon" onclick="socket.emit('voiceTask', 'eventos')" style="cursor:pointer; font-size:1.5rem;" title="Calendario">📅</div>
     <div id="ai-trigger" class="header-icon ai-loading" style="margin-right: 0;" title="Cargando IA en servidor...">🤖</div>
     <span id="ai-progress-text" style="font-size: 0.85rem; color: var(--amber); font-family: 'DM Mono', monospace; font-weight: bold; width: 45px;"></span>
   </div>
@@ -109,6 +110,26 @@
       </div>
       <div id="pay-summary"></div>
       <div id="payments-list"></div>
+    </div>
+    <div id="view-events" style="display:none; height:100%; flex-direction:column; padding-bottom: 40px">
+      <div class="section-header">
+        <div class="section-icon">📅</div>
+        <h2>CALENDARIO DE EVENTOS</h2>
+        <div class="back-hint">← atrás</div>
+      </div>
+      <div style="display:flex; gap:20px; flex:1; margin-top:10px;">
+        <div style="flex:2; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding: 0 10px;">
+  <div onclick="socket.emit('voiceTask', 'mes anterior')" style="cursor:pointer; color:var(--amber); font-size:1.5rem;">◀</div>
+  <h3 id="cal-title" style="color:var(--amber); font-family:'Cinzel',serif; font-size:1.2rem; margin:0;">Mes</h3>
+  <div onclick="socket.emit('voiceTask', 'mes siguiente')" style="cursor:pointer; color:var(--amber); font-size:1.5rem;">▶</div>
+</div>          <div id="cal-grid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:10px; text-align:center;"></div>
+        </div>
+        <div style="flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:20px; overflow-y:auto;">
+          <h3 style="color:var(--cream); margin-bottom:15px; font-size:1rem;">Próximos Eventos</h3>
+          <div id="events-list-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+      </div>
     </div>
 
     <div id="view-chat" style="display:none; height:100%; flex-direction:column; padding-bottom: 40px">

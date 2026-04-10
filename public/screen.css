@@ -55,7 +55,7 @@
 
   /* ── GRID VIEW ── */
   #grid-view {
-    position:absolute; inset:62px 0 0 0;
+    position:absolute; inset:90px 0 0 0;
     display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;
     gap:18px; padding:22px;
     transition:opacity .35s, transform .35s;
@@ -89,7 +89,7 @@
 
   /* ── SECTION VIEWS ── */
   #section-view {
-    position:absolute; inset:62px 0 0 0; padding:26px 30px;
+    position:absolute; inset: 90px 0 0 0; padding:26px 30px;
     opacity:0; pointer-events:none;
     transition:opacity .35s, transform .35s;
     transform:translateY(16px); overflow:hidden;

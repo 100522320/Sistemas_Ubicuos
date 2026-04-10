@@ -186,7 +186,10 @@ let state = {
   appliances: loadJSON('appliances'), 
   objects:  loadJSON('objects'),
   payments: loadJSON('payments'),
-  tasks:    loadJSON('tasks')
+  tasks:    loadJSON('tasks'),
+  events: [],
+  calendarMonth: new Date().getMonth(), 
+  calendarYear: new Date().getFullYear()
 };
 
 // ── GRID CONFIG ──
@@ -200,33 +203,16 @@ function handleObjectVoice(socket, t, tNorm) {
   // 1. CONSULTA E HISTORIAL: "¿dónde están las llaves?"
   if (IS_QUERY.test(tNorm)) {
     let found = null;
-    
     for (const obj of state.objects) {
       if (tNorm.includes(norm(obj.name))) { found = obj; break; }
     }
+    // Si no mencionó nombre concreto pero hay un objeto seleccionado, úsalo
+    if (!found) found = state.objects[state.objectsCursor] || null;
 
-    if (!found) {
-      // Si la frase es muy corta (ej. "dónde está"), asumimos que se refiere al objeto seleccionado
-      if (tNorm.split(/\s+/).length <= 3 && state.objects.length > 0) {
-        found = state.objects[state.objectsCursor];
-      } 
-      // Si la frase es más larga (ej. "dónde están las zapatillas"), significa 
-      // que ha pedido un objeto concreto que NO existe.
-      else {
-        socket.emit('objectError', { msg: 'Objeto no definido en el sistema' });
-        // Hacemos que Pepe lo lea en alto
-        io.emit('speakPhrase', { text: 'Lo siento, no tengo ese objeto registrado en la base de datos.' });
-        return true; 
-      }
-    }
-
-    // Si encontró el objeto pero no tiene historial de dónde se dejó
     if (!found || !found.history || found.history.length === 0) {
       socket.emit('objectQuery', { found: false, name: found ? found.name : '?' });
       return true;
     }
-
-    // Si lo encontró y tiene historial
     const last = found.history[found.history.length - 1];
     socket.emit('objectQuery', {
       found: true,
@@ -236,7 +222,6 @@ function handleObjectVoice(socket, t, tNorm) {
       when:     timeAgo(new Date(last.when)),
       history:  found.history
     });
-    
     const idx = state.objects.indexOf(found);
     if (idx !== -1) state.objectsCursor = idx;
     io.emit('stateUpdate', state);
@@ -459,7 +444,136 @@ socket.on('guardarUbicacionReal', (coords) => {
       }
       return; // Detener ejecución normal
     }
+// ── ENTRAR A EVENTOS (Por voz) ──
+    if (/(eventos|calendario|agenda)/.test(tNorm)) {
+      state.activeSection = 'events';
+      io.emit('stateUpdate', state);
+      socket.emit('taskSaved', { text: 'Abriendo calendario' });
+      return;
+    }
 
+    // ==========================================================
+    // ── SECCIÓN: EVENTOS ──
+    // ==========================================================
+    if (state.activeSection === 'events') {
+      
+      // SALIR de Eventos
+      if (/^(atras|salir|volver|cerrar)/.test(tNorm)) {
+        state.activeSection = null;
+        io.emit('stateUpdate', state);
+        return;
+      }
+
+      // NAVEGAR POR LOS MESES
+      if (/mes (siguiente|proximo|que viene|adelante)/.test(tNorm)) {
+        state.calendarMonth++;
+        if (state.calendarMonth > 11) { state.calendarMonth = 0; state.calendarYear++; }
+        io.emit('stateUpdate', state);
+        socket.emit('taskSaved', { text: 'Mes siguiente' });
+        return;
+      }
+      if (/mes (anterior|pasado|atras)/.test(tNorm)) {
+        state.calendarMonth--;
+        if (state.calendarMonth < 0) { state.calendarMonth = 11; state.calendarYear--; }
+        io.emit('stateUpdate', state);
+        socket.emit('taskSaved', { text: 'Mes anterior' });
+        return;
+      }
+
+      // AÑADIR EVENTO
+      if (/^(.*?)\s*(anade|anadir|crea|crear|nuevo|pon|programa).*evento/.test(tNorm)) {
+        let pText = tNorm;
+        const nums = {"uno":1,"dos":2,"tres":3,"cuatro":4,"cinco":5,"seis":6,"siete":7,"ocho":8,"nueve":9,"diez":10,"once":11,"doce":12,"trece":13,"catorce":14,"quince":15,"dieciseis":16,"diecisiete":17,"dieciocho":18,"diecinueve":19,"veinte":20,"veintiuno":21,"veintidos":22,"veintitres":23,"veinticuatro":24,"veinticinco":25,"veintiseis":26,"veintisiete":27,"veintiocho":28,"veintinueve":29,"treinta":30,"treinta y uno":31};
+        for(let k in nums) { pText = pText.replace(new RegExp(`\\b${k}\\b`, 'g'), nums[k]); }
+
+        // 1. Extraer Persona (La primera palabra si existe)
+        const actionMatch = pText.match(/^([a-z]+)\s+(?:anade|anadir|crea|crear|nuevo|pon|programa)/);
+        let person = actionMatch ? actionMatch[1].charAt(0).toUpperCase() + actionMatch[1].slice(1) : 'Casa';
+
+        // 2. Extraer Nombre del evento (Todo lo que hay entre "evento" y la siguiente palabra clave)
+        const nameMatch = pText.match(/evento\s+(.*?)\s+(?=el\s+|dia\s+|a las|para|con)/);
+        let eventName = nameMatch ? nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1) : 'Evento';
+
+        // 3. Extraer Datos base
+        const dayMatch = pText.match(/(?:dia|el)\s*(\d+)/);
+        const timeMatch = pText.match(/(?:a las|las|alas|a la|ala)\s*(\d+)/);
+        const peopleMatch = pText.match(/(?:con|para|de)\s*(\d+)/);
+        const monthMatch = pText.match(/(?:de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/);
+
+        if (dayMatch && timeMatch && peopleMatch) {
+          const day = parseInt(dayMatch[1]);
+          const time = timeMatch[1] + ':00';
+          const people = parseInt(peopleMatch[1]);
+          
+          const monthsList = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+          let eventMonth = new Date().getMonth(); // Mes actual por defecto
+          let eventYear = new Date().getFullYear();
+
+          // Si dice el mes, lo cambiamos
+          if (monthMatch) {
+            eventMonth = monthsList.indexOf(monthMatch[1]);
+            // Si el mes que dice es anterior al mes actual (ej: estamos en Nov y dice Febrero), asumimos que es el año que viene
+            if (eventMonth < new Date().getMonth()) eventYear++;
+          }
+
+          if (day < 1 || day > 31) {
+            socket.emit('taskIgnored', { text: 'Día inválido' });
+            return;
+          }
+
+          state.events.push({ id: Date.now(), day, month: eventMonth, year: eventYear, time, people, name: eventName, person });
+          state.events.sort((a, b) => a.day - b.day);
+          
+          // Cambiamos el calendario visualmente a ese mes para que vea lo que acaba de añadir
+          state.calendarMonth = eventMonth;
+          state.calendarYear = eventYear;
+          
+          io.emit('stateUpdate', state);
+          socket.emit('taskSaved', { text: `Evento añadido` });
+          io.emit('speakPhrase', { text: `Añadido ${eventName} el ${day} de ${monthsList[eventMonth]}.` });
+        } else {
+          socket.emit('taskError');
+          console.log("Fallo:", pText);
+          io.emit('speakPhrase', { text: 'Faltan datos. Di: Adrián añade evento cena el día 2 a las 10 para 4 personas.' });
+        }
+        return;
+      }
+
+      // BORRAR EVENTO
+      if (/^(.*?)\s*(borra|borrar|elimina|eliminar|quita|quitar|cancela).*evento/.test(tNorm)) {
+        let pText = tNorm;
+        const nums = {"uno":1,"dos":2,"tres":3,"cuatro":4,"cinco":5,"seis":6,"siete":7,"ocho":8,"nueve":9,"diez":10,"once":11,"doce":12,"trece":13,"catorce":14,"quince":15,"dieciseis":16,"diecisiete":17,"dieciocho":18,"diecinueve":19,"veinte":20,"veintiuno":21,"veintidos":22,"veintitres":23,"veinticuatro":24,"veinticinco":25,"veintiseis":26,"veintisiete":27,"veintiocho":28,"veintinueve":29,"treinta":30,"treinta y uno":31};
+        for(let k in nums) { pText = pText.replace(new RegExp(`\\b${k}\\b`, 'g'), nums[k]); }
+
+        const dayMatch = pText.match(/(?:dia|el)\s*(\d+)/);
+        const monthMatch = pText.match(/(?:de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/);
+        
+        if (dayMatch) {
+          const day = parseInt(dayMatch[1]);
+          const monthsList = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+          let targetMonth = monthMatch ? monthsList.indexOf(monthMatch[1]) : state.calendarMonth; // Borra del mes que haya dicho, o del que esté viendo
+          
+          const idx = state.events.findIndex(e => e.day === day && e.month === targetMonth);
+
+          if (idx !== -1) {
+            state.events.splice(idx, 1);
+            io.emit('stateUpdate', state);
+            socket.emit('taskDeleted', { text: `Evento borrado` });
+            io.emit('speakPhrase', { text: `El evento ha sido cancelado.` });
+          } else {
+            socket.emit('taskError');
+            io.emit('speakPhrase', { text: `No hay eventos ese día.` });
+          }
+        } else {
+          socket.emit('taskError');
+          io.emit('speakPhrase', { text: 'Dime qué día quieres borrar.' });
+        }
+        return;
+      }
+
+      socket.emit('voiceUnknown', { text });
+      return;
+    }
     // 2. CASO: PIKACHU MODE
     if (/pikachu te elijo a ti/.test(tNorm)) {
       io.emit('pikachuMode', true);
@@ -498,11 +612,28 @@ socket.on('guardarUbicacionReal', (coords) => {
             const temp = parseInt(data.current_condition[0].temp_C);
             const desc = data.current_condition[0].lang_es[0].value.toLowerCase();
             
-            // Opcional: Pepe te dice el barrio/ciudad que detecta wttr para confirmar
             const ciudadDetectada = data.nearest_area[0].areaName[0].value;
             let frase = `El tiempo actual en ${ciudadDetectada} es de ${temp} grados y está ${desc}. `;
             
-            // ... resto de tu lógica de frases (lluvia, calor, frío) ...
+            // 2. Lógica de frases extra según el clima
+        if (desc.includes("lluvia") || desc.includes("llovizna") || desc.includes("chubascos")) {
+            frase += "¡No olvides el paraguas si vas a salir!";
+        } 
+        else if (temp >= 30) {
+            frase += "Hace bastante calor, busca la sombra y mantente hidratado.";
+        } 
+        else if (temp <= 10) {
+            frase += "Hace bastante frío hoy, no olvides una buena chaqueta.";
+        } 
+        else if (desc.includes("despejado") || desc.includes("sol")) {
+            frase += "Es un momento genial para dar un paseo.";
+        } 
+        else if (desc.includes("nieve")) {
+            frase += "¡Mira! Está nevando, qué día más especial.";
+        }
+        else {
+            frase += "¡Que tengas un excelente día!";
+        }
 
             io.emit('speakPhrase', { text: frase });
         })

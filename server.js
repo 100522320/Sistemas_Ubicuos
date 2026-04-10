@@ -98,7 +98,8 @@ const FILES = {
   appliances: path.join(DATA_DIR, 'appliances.json'),
   objects:  path.join(DATA_DIR, 'objects.json'),
   payments: path.join(DATA_DIR, 'payments.json'),
-  tasks:    path.join(DATA_DIR, 'tasks.json')
+  tasks:    path.join(DATA_DIR, 'tasks.json'),
+  events:   path.join(DATA_DIR, 'events.json')
 };
 
 // Datos predeterminados si los archivos no existen la primera vez
@@ -109,7 +110,8 @@ const defaultData = {
   ],
   objects: [],
   payments: [],
-  tasks: []
+  tasks: [],
+  events: []
 };
 
 // Función para cargar un JSON o crearlo si no existe
@@ -125,6 +127,7 @@ function loadJSON(key) {
 function saveAppliances() { fsSync.writeFileSync(FILES.appliances, JSON.stringify(state.appliances, null, 2), 'utf8'); }
 function saveObjects()  { fsSync.writeFileSync(FILES.objects,  JSON.stringify(state.objects,  null, 2), 'utf8'); }
 function savePayments() { fsSync.writeFileSync(FILES.payments, JSON.stringify(state.payments, null, 2), 'utf8'); }
+function saveEvents()   { fsSync.writeFileSync(FILES.events,   JSON.stringify(state.events,   null, 2), 'utf8'); } 
 
 // ── TAREAS (async) ──
 const DATA_FILE = path.join(__dirname, 'data', 'tasks.json');
@@ -182,12 +185,12 @@ app.delete('/api/tasks/:id', async (req, res) => {
 let state = {
   activeSection: null,
   cursor: { x: 0, y: 0 },
-  appliancesCursor: 0, tasksCursor: 0, objectsCursor: 0, paymentsCursor: 0,
+  appliancesCursor: 0, tasksCursor: 0, objectsCursor: 0, paymentsCursor: 0,eventsCursor: 0,
   appliances: loadJSON('appliances'), 
   objects:  loadJSON('objects'),
   payments: loadJSON('payments'),
   tasks:    loadJSON('tasks'),
-  events: [],
+  events: loadJSON('events'),    
   calendarMonth: new Date().getMonth(), 
   calendarYear: new Date().getFullYear()
 };
@@ -427,6 +430,60 @@ socket.on('guardarUbicacionReal', (coords) => {
     const t     = text.trim().toLowerCase();
     const tNorm = norm(t);
 
+   
+    if (/^(atras|salir|volver|cerrar)/.test(tNorm)) {
+      if (state.activeSection !== null) {
+        state.activeSection = null;
+        io.emit('stateUpdate', state);
+        
+      } else {
+        io.emit('speakPhrase', { text: 'Ya estás en el inicio' });
+      }
+      return; // Cortamos aquí para que no siga leyendo comandos
+    }
+    if (/(que tengo|tengo algo|que hay|dime los eventos|eventos para).*?(?:dia|el)\s*(\d+|[a-z]+)/.test(tNorm)) {
+      let pText = tNorm;
+      
+      // 1. Convertir números escritos a dígitos por si dice "el día quince"
+      const nums = {"uno":1,"dos":2,"tres":3,"cuatro":4,"cinco":5,"seis":6,"siete":7,"ocho":8,"nueve":9,"diez":10,"once":11,"doce":12,"trece":13,"catorce":14,"quince":15,"dieciseis":16,"diecisiete":17,"dieciocho":18,"diecinueve":19,"veinte":20,"veintiuno":21,"veintidos":22,"veintitres":23,"veinticuatro":24,"veinticinco":25,"veintiseis":26,"veintisiete":27,"veintiocho":28,"veintinueve":29,"treinta":30,"treinta y uno":31};
+      for(let k in nums) { pText = pText.replace(new RegExp(`\\b${k}\\b`, 'g'), nums[k]); }
+
+      // 2. Extraer el día y el mes
+      const dayMatch = pText.match(/(?:dia|el)\s*(\d+)/);
+      const monthMatch = pText.match(/(?:de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/);
+
+      if (dayMatch) {
+        const day = parseInt(dayMatch[1]);
+        const monthsList = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        
+        // Si no dice mes, usamos el actual
+        let targetMonth = monthMatch ? monthsList.indexOf(monthMatch[1]) : new Date().getMonth();
+        let targetYear = new Date().getFullYear();
+
+        // Si dice un mes que ya ha pasado este año (ej: dice "Enero" estando en Noviembre), asumimos que es el año que viene
+        if (monthMatch && targetMonth < new Date().getMonth()) {
+          targetYear++;
+        }
+
+        // 3. Buscar eventos que coincidan
+        const eventsOnDay = state.events.filter(e => e.day === day && e.month === targetMonth && e.year === targetYear);
+
+        if (eventsOnDay.length === 0) {
+          io.emit('speakPhrase', { text: `No tienes ningún evento el día ${day} de ${monthsList[targetMonth]}.` });
+        } else {
+          // 4. Formatear la respuesta
+          let textResp = eventsOnDay.length === 1 ? `El día ${day} de ${monthsList[targetMonth]} tienes un evento: ` : `El día ${day} de ${monthsList[targetMonth]} tienes ${eventsOnDay.length} eventos: `;
+          
+          // Unimos los nombres y las horas. Ej: "Cena a las 10, y Reunión a las 12"
+          const evDetails = eventsOnDay.map(e => `${e.name} a las ${e.time.split(':')[0]}`).join(', y ');
+          
+          io.emit('speakPhrase', { text: textResp + evDetails + "." });
+        }
+      } else {
+        io.emit('speakPhrase', { text: 'No he entendido bien el día. Prueba a decir: ¿Qué tengo el día 15 de mayo?' });
+      }
+      return; 
+    }
     // 1. CASO: TRIGGER "OYE PEPE"
     const TRIGGER_PEPE = /^(oye )?pepe/;
     if (TRIGGER_PEPE.test(tNorm)) {
@@ -457,12 +514,7 @@ socket.on('guardarUbicacionReal', (coords) => {
     // ==========================================================
     if (state.activeSection === 'events') {
       
-      // SALIR de Eventos
-      if (/^(atras|salir|volver|cerrar)/.test(tNorm)) {
-        state.activeSection = null;
-        io.emit('stateUpdate', state);
-        return;
-      }
+ 
 
       // NAVEGAR POR LOS MESES
       if (/mes (siguiente|proximo|que viene|adelante)/.test(tNorm)) {
@@ -523,6 +575,7 @@ socket.on('guardarUbicacionReal', (coords) => {
 
           state.events.push({ id: Date.now(), day, month: eventMonth, year: eventYear, time, people, name: eventName, person });
           state.events.sort((a, b) => a.day - b.day);
+          saveEvents();
           
           // Cambiamos el calendario visualmente a ese mes para que vea lo que acaba de añadir
           state.calendarMonth = eventMonth;
@@ -556,6 +609,7 @@ socket.on('guardarUbicacionReal', (coords) => {
 
           if (idx !== -1) {
             state.events.splice(idx, 1);
+            saveEvents();
             io.emit('stateUpdate', state);
             socket.emit('taskDeleted', { text: `Evento borrado` });
             io.emit('speakPhrase', { text: `El evento ha sido cancelado.` });

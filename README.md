@@ -1,6 +1,6 @@
 # 🏠 Smart Home Remote Control
 
-Sistema de control remoto domótico con giroscopio.
+Sistema de control remoto domótico con giroscopio y comandos de voz.
 
 ## Arquitectura
 

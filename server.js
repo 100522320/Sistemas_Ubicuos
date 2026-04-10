@@ -200,16 +200,33 @@ function handleObjectVoice(socket, t, tNorm) {
   // 1. CONSULTA E HISTORIAL: "¿dónde están las llaves?"
   if (IS_QUERY.test(tNorm)) {
     let found = null;
+    
     for (const obj of state.objects) {
       if (tNorm.includes(norm(obj.name))) { found = obj; break; }
     }
-    // Si no mencionó nombre concreto pero hay un objeto seleccionado, úsalo
-    if (!found) found = state.objects[state.objectsCursor] || null;
 
+    if (!found) {
+      // Si la frase es muy corta (ej. "dónde está"), asumimos que se refiere al objeto seleccionado
+      if (tNorm.split(/\s+/).length <= 3 && state.objects.length > 0) {
+        found = state.objects[state.objectsCursor];
+      } 
+      // Si la frase es más larga (ej. "dónde están las zapatillas"), significa 
+      // que ha pedido un objeto concreto que NO existe.
+      else {
+        socket.emit('objectError', { msg: 'Objeto no definido en el sistema' });
+        // Hacemos que Pepe lo lea en alto
+        io.emit('speakPhrase', { text: 'Lo siento, no tengo ese objeto registrado en la base de datos.' });
+        return true; 
+      }
+    }
+
+    // Si encontró el objeto pero no tiene historial de dónde se dejó
     if (!found || !found.history || found.history.length === 0) {
       socket.emit('objectQuery', { found: false, name: found ? found.name : '?' });
       return true;
     }
+
+    // Si lo encontró y tiene historial
     const last = found.history[found.history.length - 1];
     socket.emit('objectQuery', {
       found: true,
@@ -219,6 +236,7 @@ function handleObjectVoice(socket, t, tNorm) {
       when:     timeAgo(new Date(last.when)),
       history:  found.history
     });
+    
     const idx = state.objects.indexOf(found);
     if (idx !== -1) state.objectsCursor = idx;
     io.emit('stateUpdate', state);

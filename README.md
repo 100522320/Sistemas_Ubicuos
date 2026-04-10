@@ -29,6 +29,7 @@ El servidor se levanta en **http://localhost:3000**
 | Móvil       | http://TU_IP:3000/mobile.html   |
 
 > Para conectar el móvil, usa la IP de tu ordenador en la red local (ej: 192.168.1.10)
+> Es recomendable compartir datos desde tu telefono al ordenador y luego mirar cual es su ip usando el comando ipconfig 
 
 ## Controles del Móvil
 

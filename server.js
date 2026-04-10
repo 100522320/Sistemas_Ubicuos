@@ -533,8 +533,7 @@ socket.on('guardarUbicacionReal', (coords) => {
           io.emit('speakPhrase', { text: `Añadido ${eventName} el ${day} de ${monthsList[eventMonth]}.` });
         } else {
           socket.emit('taskError');
-          console.log("Fallo:", pText);
-          io.emit('speakPhrase', { text: 'Faltan datos. Di: Adrián añade evento cena el día 2 a las 10 para 4 personas.' });
+          io.emit('speakPhrase', { text: 'Faltan datos. Comando tipo: Adrián añade evento cena el día 2 a las 10 para 4 personas.' });
         }
         return;
       }
@@ -571,8 +570,7 @@ socket.on('guardarUbicacionReal', (coords) => {
         return;
       }
 
-      socket.emit('voiceUnknown', { text });
-      return;
+    
     }
     // 2. CASO: PIKACHU MODE
     if (/pikachu te elijo a ti/.test(tNorm)) {

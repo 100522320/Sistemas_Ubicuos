@@ -16,5 +16,23 @@
     "title": "comprar pan",
     "assignee": "Adrián",
     "done": true
+  },
+  {
+    "id": "1775939801291",
+    "title": "a comprar pan",
+    "assignee": "Mónica",
+    "done": false
+  },
+  {
+    "id": "1775939807975",
+    "title": "sacar al perro",
+    "assignee": "Carlos",
+    "done": false
+  },
+  {
+    "id": "1775939816751",
+    "title": "ir a clase",
+    "assignee": "Tomás",
+    "done": false
   }
 ]

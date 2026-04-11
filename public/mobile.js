@@ -276,7 +276,7 @@ const socket = io();
     const hints = {
     events: {
         t: "📅 Comandos — Eventos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
-        ex: "Añadir: <span>«Adrián añade evento Cena el día 15 de mayo a las 10 para 4»</span><br>Navegar: <span>«Mes siguiente / anterior»</span><br>Borrar: <span>«Borrar evento día 15 de mayo»</span>"
+        ex: "Añadir: <span>«Adrián añade evento Cena el día 15 de mayo a las 10 para 4»</span><br>Eventos: <span>«¿Que tengo el dia 2 de mayo?»</span><br>Navegar: <span>«Mes siguiente / anterior»</span><br>Borrar: <span>«Borrar evento día 15 de mayo»</span>"
       },
       appliances: {
         t: "🎤 Comandos — Dispositivos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
@@ -288,7 +288,7 @@ const socket = io();
       },
       objects: {
         t: "🎤 Comandos — Objetos", c: "var(--blue)", bg: "rgba(106,176,232,.06)", bd: "rgba(106,176,232,.2)",
-        ex: "Registrar: <span>«Soy [Tu nombre], He dejado los zapatos en la cocina»</span><br>Consultar: <span>«¿Dónde están las llaves?»</span><br>Nuevo: <span>«Añadir gafas»</span><br>Borrar: <span>«Borrar gafas</span>"
+        ex: "Registrar: <span>«Soy [Tu nombre], He dejado los zapatos en la cocina»</span><br>Consultar: <span>«¿Dónde están las gafas?»</span><br>Nuevo: <span>«Añadir gafas»</span><br>Borrar: <span>«Borrar gafas</span>"
       },
       payments: {
         t: "🎤 Comandos — Pagos", c: "var(--red)", bg: "rgba(224,96,96,.06)", bd: "rgba(224,96,96,.2)",
@@ -296,7 +296,7 @@ const socket = io();
       },
       main: {
         t: "🎤 Comandos — Inicio", c: "var(--cream)", bg: "rgba(240,230,208,.06)", bd: "rgba(240,230,208,.2)",
-        ex: "Navegar: <span>«Dispositivos»</span>, <span>«T¿Que tengo el dia 2 de mayo?»,...</span><br>Clima: <span>«¿Qué tiempo hace?»</span><br>Asistente: <span>«Oye Pepe, ¿quién inventó el WiFi?»</span><br>Global: <span>«¿Qué tiempo hace?»</span>,<span>«¿Dónde están las gafas?»</span>"
+        ex: "Navegar: <span>«Dispositivos»,«Eventos»,...</span><br>Eventos: <span>«¿Que tengo el dia 2 de mayo?»</span><br>Clima: <span>«¿Qué tiempo hace?»</span><br>Asistente: <span>«Oye Pepe, ¿quién inventó el WiFi?»</span><br>Global: <span>«¿Qué tiempo hace?»</span>,<span>«¿Dónde están las gafas?»</span>"
       }
     };
     

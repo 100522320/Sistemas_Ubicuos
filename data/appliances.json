@@ -3,7 +3,7 @@
     "name": "Luz habitación",
     "category": "light",
     "icon": "💡",
-    "on": false
+    "on": true
   },
   {
     "name": "Luz salón",
@@ -33,7 +33,7 @@
     "name": "Ventilador de techo salón",
     "category": "fan",
     "icon": "🌀",
-    "on": false
+    "on": true
   },
   {
     "name": "Ventilador cocina",

@@ -9,15 +9,6 @@
     "paid": false
   },
   {
-    "id": 1774610765062,
-    "name": "Coche",
-    "icon": "💳",
-    "amount": 0,
-    "due": "Sin fecha",
-    "category": "otros",
-    "paid": false
-  },
-  {
     "id": 1774610782675,
     "name": "Camión",
     "icon": "💳",
@@ -31,6 +22,24 @@
     "name": "Alcachofa",
     "icon": "💳",
     "amount": 250,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1775939848836,
+    "name": "Reloj",
+    "icon": "💳",
+    "amount": 357.75,
+    "due": "Sin fecha",
+    "category": "otros",
+    "paid": false
+  },
+  {
+    "id": 1775939865444,
+    "name": "Coche",
+    "icon": "💳",
+    "amount": 0,
     "due": "Sin fecha",
     "category": "otros",
     "paid": false

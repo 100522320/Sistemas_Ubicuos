@@ -3,7 +3,7 @@
     "name": "Luz habitación",
     "category": "light",
     "icon": "💡",
-    "on": true
+    "on": false
   },
   {
     "name": "Luz salón",

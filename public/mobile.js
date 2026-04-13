@@ -376,19 +376,26 @@ const socket = io();
   function handleOrientation(e) {
     const gamma = e.gamma || 0;
     const beta  = e.beta  || 0;
+    
     if (calibrating) { baseGamma = gamma; baseBeta = beta; return; }
+    
     const dGamma = gamma - (baseGamma || 0);
     const dBeta  = beta  - (baseBeta  || 0);
+    
     const area = document.getElementById('gyro-area');
     const w = area.clientWidth, h = area.clientHeight;
+    
     const bx = Math.max(30, Math.min(w - 30, w/2 + (dGamma / 30) * w/2));
     const by = Math.max(30, Math.min(h - 30, h/2 + (dBeta  / 30) * h/2));
+    
     const bubble = document.getElementById('gyro-bubble');
     bubble.style.left = (bx - 30) + 'px';
     bubble.style.top  = (by - 30) + 'px';
+    
     const now = Date.now();
     if (now - lastDirTime < COOLDOWN_MS) return;
     if (now - lastShakeTime < 800) return;
+    
     let dir = null;
     if (Math.abs(dGamma) > Math.abs(dBeta)) {
       if      (dGamma >  THRESHOLD_DEG) dir = 'right';
@@ -397,12 +404,29 @@ const socket = io();
       if      (dBeta  >  THRESHOLD_DEG) dir = 'down';
       else if (dBeta  < -THRESHOLD_DEG) dir = 'up';
     }
+    
+    // 🔙 ATRÁS: Levantar el móvil (existente)
     if (beta > 70 && now - lastDirTime > 800) {
       if (currentSection !== null) { sendBack(); lastDirTime = now; }
       return;
     }
-    if (dir && dir !== lastDir) { lastDir = dir; navSend(dir); lastDirTime = now; }
-    else if (!dir) { lastDir = null; }
+
+    // ⚡ ENTRAR/ACCIÓN: Inclinar el móvil completamente hacia abajo (NUEVO)
+    if (beta < -40 && now - lastDirTime > 800) {
+      if (currentSection === null) sendEnter();
+      else sendAction();
+      lastDirTime = now;
+      return;
+    }
+
+    // Navegación normal con la cruceta (arriba/abajo/izq/der)
+    if (dir && dir !== lastDir) { 
+        lastDir = dir; 
+        navSend(dir); 
+        lastDirTime = now; 
+    } else if (!dir) { 
+        lastDir = null; 
+    }
   }
 
   function handleMotion(e) {

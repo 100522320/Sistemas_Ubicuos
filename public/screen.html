@@ -125,7 +125,7 @@
   <div onclick="socket.emit('voiceTask', 'mes siguiente')" style="cursor:pointer; color:var(--amber); font-size:1.5rem;">▶</div>
 </div>          <div id="cal-grid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:10px; text-align:center;"></div>
         </div>
-        <div style="flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:20px; overflow-y:auto;">
+        <div style="flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:14px; padding:20px; overflow:hidden;">
           <h3 style="color:var(--cream); margin-bottom:15px; font-size:1rem;">Próximos Eventos</h3>
           <div id="events-list-container" style="display:flex; flex-direction:column; gap:10px;"></div>
         </div>

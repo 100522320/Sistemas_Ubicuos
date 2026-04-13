@@ -548,10 +548,17 @@ function renderEvents(s) {
         return true;
     });
 
+    // Definimos el máximo de eventos que caben en pantalla visualmente
+    const espacioDisponible = window.innerHeight - 400; 
+    const MAX_EVENTS = Math.max(1, Math.floor(espacioDisponible / 90));
+    const visibleEvents = upcomingEvents.slice(0, MAX_EVENTS);
+    const hiddenEventsCount = upcomingEvents.length - MAX_EVENTS;
+
     if (upcomingEvents.length === 0) {
         list.innerHTML = '<div style="color:var(--muted); font-size:0.85rem; text-align:center; margin-top:20px;">No hay eventos próximos este mes.</div>';
     } else {
-        upcomingEvents.forEach((ev) => {
+        // Renderizamos solo los eventos que entran en el límite
+        visibleEvents.forEach((ev) => {
             list.innerHTML += `
                 <div style="background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px; position:relative;">
                     <div style="position:absolute; top:12px; right:12px; background:var(--amber2); color:#fff; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold;">${ev.person}</div>
@@ -564,6 +571,15 @@ function renderEvents(s) {
                 </div>
             `;
         });
+
+        // Si hay eventos que se han quedado fuera por el límite de espacio, mostramos los puntos suspensivos
+        if (hiddenEventsCount > 0) {
+            list.innerHTML += `
+                <div style="color:var(--amber); font-size:1.8rem; text-align:center; margin-top:2px; font-weight:bold; letter-spacing: 5px; opacity: 0.5;">
+                    ...
+                </div>
+            `;
+        }
     }
   }
 

@@ -209,13 +209,21 @@ function handleObjectVoice(socket, t, tNorm) {
     for (const obj of state.objects) {
       if (tNorm.includes(norm(obj.name))) { found = obj; break; }
     }
-    // Si no mencionó nombre concreto pero hay un objeto seleccionado, úsalo
-    if (!found) found = state.objects[state.objectsCursor] || null;
-
-    if (!found || !found.history || found.history.length === 0) {
-      socket.emit('objectQuery', { found: false, name: found ? found.name : '?' });
+    
+    //  Si no se encuentra en el JSON, avisa por voz y corta la ejecución
+    if (!found) {
+      io.emit('speakPhrase', { text: 'Ese objeto no está registrado en la base de datos.' });
+      socket.emit('objectQuery', { found: false, name: '?' });
       return true;
     }
+
+    //  Si existe pero no tiene historial, también lo dice por voz
+    if (!found.history || found.history.length === 0) {
+      io.emit('speakPhrase', { text: `Tengo registrado el objeto ${found.name}, pero nadie me ha dicho dónde lo ha dejado.` });
+      socket.emit('objectQuery', { found: false, name: found.name });
+      return true;
+    }
+
     const last = found.history[found.history.length - 1];
     socket.emit('objectQuery', {
       found: true,

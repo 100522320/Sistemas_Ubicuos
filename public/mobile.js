@@ -273,32 +273,32 @@ const socket = io();
     const hintCard = document.getElementById('voice-hint-card');
     //SESION 1
     // Objeto con todos los comandos de voz, incluyendo el menú principal ("main")
-    //const hints = {
-    //events: {
-      //  t: "📅 Comandos — Eventos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
-        //ex: "Añadir: <span>«Adrián añade evento Cena el día 15 de mayo a las 10 para 4»</span><br>Eventos: <span>«¿Que tengo el dia 2 de mayo?»</span><br>Navegar: <span>«Mes siguiente / anterior»</span><br>Borrar: <span>«Borrar evento día 15 de mayo»</span>"
-      //},
-      //appliances: {
-        //t: "🎤 Comandos — Dispositivos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
-        //ex: "Encender/Subir: <span>«Encender luz» / «Subir persiana salón»</span><br>Apagar/Bajar: <span>«Apagar aire» / «Bajar toldo»</span><br>Añadir: <span>«Añadir aire acondicionado»</span><br>Borrar: <span>«Borrar luz terraza»</span>"
-      //},
-      //tasks: {
-        //t: "🎤 Comandos — Tareas", c: "var(--green)", bg: "rgba(126,201,138,.06)", bd: "rgba(126,201,138,.2)",
-        //ex: "Añadir: <span>«Añadir Adrián comprar pan»</span><br>Borrar: <span>«Borrar Adrián comprar pan»</span>"
-      //},
-      //objects: {
-        //t: "🎤 Comandos — Objetos", c: "var(--blue)", bg: "rgba(106,176,232,.06)", bd: "rgba(106,176,232,.2)",
-        //ex: "Registrar: <span>«Soy [Tu nombre], He dejado los zapatos en la cocina»</span><br>Consultar: <span>«¿Dónde están las gafas?»</span><br>Nuevo: <span>«Añadir gafas»</span><br>Borrar: <span>«Borrar gafas</span>"
-      //},
-      //payments: {
-        //t: "🎤 Comandos — Pagos", c: "var(--red)", bg: "rgba(224,96,96,.06)", bd: "rgba(224,96,96,.2)",
-        //ex: "Añadir: <span>«Añadir Netflix 14 con 99 euros»</span><br>Pagar: <span>«Netflix pagado»</span><br>Pendiente: <span>«Netflix pendiente»</span><br>Borrar: <span>«Borrar Netflix»</span>"
-      //},
-      //main: {
-        //t: "🎤 Comandos — Inicio", c: "var(--cream)", bg: "rgba(240,230,208,.06)", bd: "rgba(240,230,208,.2)",
-        //ex: "Navegar: <span>«Dispositivos»,«Eventos»,...</span><br>Eventos: <span>«¿Que tengo el dia 2 de mayo?»</span><br>Clima: <span>«¿Qué tiempo hace?»</span><br>Asistente: <span>«Oye Pepe, ¿quién inventó el WiFi?»</span><br>Global: <span>«¿Qué tiempo hace?»</span>,<span>«¿Dónde están las gafas?»</span>"
-      //}
-    //};
+    const hints = {
+    events: {
+        t: "📅 Comandos — Eventos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
+        ex: "Añadir: <span>«Adrián añade evento Cena el día 15 de mayo a las 10 para 4»</span><br>Eventos: <span>«¿Que tengo el dia 2 de mayo?»</span><br>Navegar: <span>«Mes siguiente / anterior»</span><br>Borrar: <span>«Borrar evento día 15 de mayo»</span>"
+      },
+      appliances: {
+        t: "🎤 Comandos — Dispositivos", c: "var(--amber)", bg: "rgba(232,160,69,.06)", bd: "rgba(232,160,69,.2)",
+        ex: "Encender/Subir: <span>«Encender luz» / «Subir persiana salón»</span><br>Apagar/Bajar: <span>«Apagar aire» / «Bajar toldo»</span><br>Añadir: <span>«Añadir aire acondicionado»</span><br>Borrar: <span>«Borrar luz terraza»</span>"
+      },
+      tasks: {
+        t: "🎤 Comandos — Tareas", c: "var(--green)", bg: "rgba(126,201,138,.06)", bd: "rgba(126,201,138,.2)",
+        ex: "Añadir: <span>«Añadir Adrián comprar pan»</span><br>Borrar: <span>«Borrar Adrián comprar pan»</span>"
+      },
+      objects: {
+        t: "🎤 Comandos — Objetos", c: "var(--blue)", bg: "rgba(106,176,232,.06)", bd: "rgba(106,176,232,.2)",
+        ex: "Registrar: <span>«Soy [Tu nombre], He dejado los zapatos en la cocina»</span><br>Consultar: <span>«¿Dónde están las gafas?»</span><br>Nuevo: <span>«Añadir gafas»</span><br>Borrar: <span>«Borrar gafas</span>"
+      },
+      payments: {
+        t: "🎤 Comandos — Pagos", c: "var(--red)", bg: "rgba(224,96,96,.06)", bd: "rgba(224,96,96,.2)",
+        ex: "Añadir: <span>«Añadir Netflix 14 con 99 euros»</span><br>Pagar: <span>«Netflix pagado»</span><br>Pendiente: <span>«Netflix pendiente»</span><br>Borrar: <span>«Borrar Netflix»</span>"
+      },
+      main: {
+        t: "🎤 Comandos — Inicio", c: "var(--cream)", bg: "rgba(240,230,208,.06)", bd: "rgba(240,230,208,.2)",
+        ex: "Navegar: <span>«Dispositivos»,«Eventos»,...</span><br>Eventos: <span>«¿Que tengo el dia 2 de mayo?»</span><br>Clima: <span>«¿Qué tiempo hace?»</span><br>Asistente: <span>«Oye Pepe, ¿quién inventó el WiFi?»</span><br>Global: <span>«¿Qué tiempo hace?»</span>,<span>«¿Dónde están las gafas?»</span>"
+      }
+    };
     
     // Si no hay una sección activa, cargamos la de "main" (Menú Principal)
     const sectionKey = s.activeSection || 'main';

@@ -203,7 +203,7 @@ const GRID_W = 2, GRID_H = 2;
 function handleObjectVoice(socket, t, tNorm) {
   const IS_QUERY = /(donde|dond|busca|buscar|ves|estas|esta|encuentr|sabe|quien|quién|cuand)/;
 
-  // 1. CONSULTA E HISTORIAL: "¿dónde están las llaves?"
+  // 1. CONSULTA E HISTORIAL: "¿dónde están las gafas?"
   if (IS_QUERY.test(tNorm)) {
     let found = null;
     for (const obj of state.objects) {
@@ -663,7 +663,7 @@ socket.on('guardarUbicacionReal', (coords) => {
     io.emit('updateWeather');
     socket.emit('taskSaved', { text: '🌤 Actualizando clima...' });
 
-    // MODIFICADO: Ahora usamos la latitud y longitud guardadas
+    // Usamos la latitud y longitud guardadas
     const url = `https://wttr.in/${ubicacionUsuario.lat},${ubicacionUsuario.lon}?format=j1&lang=es`;
 
     fetch(url)

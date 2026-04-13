@@ -210,21 +210,27 @@ function handleObjectVoice(socket, t, tNorm) {
       if (tNorm.includes(norm(obj.name))) { found = obj; break; }
     }
     // Si no mencionó nombre concreto pero hay un objeto seleccionado, úsalo
-    if (!found) found = state.objects[state.objectsCursor] || null;
+    if (!found) {
+      found = state.objects[state.objectsCursor];
+      console.log("Objeto no encontrado. Truncando al objeto seleccionado:", found.name);
+    }
 
+    // Si por algún motivo no hay historial ni siquiera del objeto seleccionado
     if (!found || !found.history || found.history.length === 0) {
       socket.emit('objectQuery', { found: false, name: found ? found.name : '?' });
       return true;
     }
+
     const last = found.history[found.history.length - 1];
     socket.emit('objectQuery', {
       found: true,
-      name:     found.name,
+      name:     found.name, // Dirá el nombre del objeto seleccionado, no el que buscabas
       location: last.location,
       who:      last.who,
       when:     timeAgo(new Date(last.when)),
       history:  found.history
     });
+    
     const idx = state.objects.indexOf(found);
     if (idx !== -1) state.objectsCursor = idx;
     io.emit('stateUpdate', state);

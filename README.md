@@ -1,3 +1,6 @@
+CHRISTIAN CANO -> 100522320
+ADRIAN CURELL -> 100522128
+
 # 🏠 Smart Home Remote Control
 
 Sistema de control remoto domótico con giroscopio y comandos de voz.

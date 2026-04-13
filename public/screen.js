@@ -124,7 +124,6 @@ function showSection(s) {
     document.getElementById('grid-view').classList.add('hidden');
     document.getElementById('section-view').classList.add('visible');
     
-    // AÑADIDO 'events' a la lista
     ['appliances','tasks','objects','payments', 'chat', 'events'].forEach(sec => {
       const el = document.getElementById('view-' + sec);
       if(el) el.style.display = 'none';
@@ -132,7 +131,6 @@ function showSection(s) {
     
     const v = document.getElementById('view-' + s.activeSection);
     if(v) {
-        // AÑADIDO 'events' al condicional flex
         v.style.display = (s.activeSection === 'tasks' || s.activeSection === 'chat' || s.activeSection === 'events') ? 'flex' : 'block';
     }
 
@@ -141,7 +139,7 @@ function showSection(s) {
       case 'tasks':        renderTasks(s);        break;
       case 'objects':      renderObjects(s);      break;
       case 'payments':     renderPayments(s);     break;
-      case 'events':       renderEvents(s);       break; // 
+      case 'events':       renderEvents(s);       break; 
     }
   }
 

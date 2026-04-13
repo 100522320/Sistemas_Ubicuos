@@ -19,7 +19,7 @@ const socket = io();
       try {
         showToast('Buscando luz...', 'blue');
         const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true, // Aceptamos todo para probar
+        acceptAllDevices: true, // Aceptamos todo 
         optionalServices: [HUE_SERVICE_UUID]
       });
         const server = await device.gatt.connect();
@@ -485,7 +485,6 @@ const socket = io();
          const sonidoPikachu = new Audio('./secreto/pikapika.mp3');
          sonidoPikachu.play().catch(err => console.log("Error reproduciendo Pikachu en móvil:", err));
       }
-      // -----------------------------------------------
 
       socket.emit('voiceTask', text);
       flash('🎤 ' + text.slice(0, 22).toUpperCase());

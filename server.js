@@ -937,21 +937,21 @@ socket.on('guardarUbicacionReal', (coords) => {
         if (isNaN(amount)) amount = 0;
 
         const newPayment = { id: Date.now(), name: name.charAt(0).toUpperCase() + name.slice(1), icon: '💳', amount, due: 'Sin fecha', category: 'otros', paid: false };
-        
+        //SESION 3//  
         // --- SI EL IMPORTE ES 0, PEDIMOS CONFIRMACIÓN ---
-        if (amount === 0) {
-          socket.pendingPayment = newPayment;
-          socket.emit('askPaymentConfirmation', { name: newPayment.name });
+        //if (amount === 0) {
+          //socket.pendingPayment = newPayment;
+          //socket.emit('askPaymentConfirmation', { name: newPayment.name });
           
           // Si no responde en 10 segundos, lo cancelamos automáticamente
-          socket.pendingPaymentTimer = setTimeout(() => {
-            if (socket.pendingPayment === newPayment) {
-              socket.pendingPayment = null;
-              socket.emit('paymentCancelledTimeout', { name: newPayment.name });
-            }
-          }, 10000); 
-          return;
-        }
+          //socket.pendingPaymentTimer = setTimeout(() => {
+            //if (socket.pendingPayment === newPayment) {
+              //socket.pendingPayment = null;
+              //socket.emit('paymentCancelledTimeout', { name: newPayment.name });
+            //}
+          ///}, 10000); 
+          ///return;
+        //}
 
         state.payments.push(newPayment);
         state.paymentsCursor = state.payments.length - 1;
